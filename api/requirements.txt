@@ -7,3 +7,4 @@ aiohttp==3.9.1
 python-dotenv==1.0.0
 python-whois==0.8.0
 dnspython==2.5.0
+python-magic==0.4.27

@@ -8,6 +8,7 @@ from datetime import datetime
 import whois
 import dns.resolver
 from urllib.parse import urlparse
+from providers import check_ioc_all_providers, calculate_score
 
 class DomainChecker:
     def __init__(self):
@@ -728,15 +729,23 @@ class FileAnalyzer:
         else:
             return {"error": "Invalid hash length"}
         
+        sources = await check_ioc_all_providers(hash_value, hash_type)
+        score, verdict, tags = calculate_score(sources)
+        
+        vt_data = next((s for s in sources if s.get("provider") == "VirusTotal"), {})
+        otx_data = next((s for s in sources if s.get("provider") == "OTX"), {})
+        
         return {
             "hash": hash_value,
             "type": hash_type,
-            "verdict": "unknown",
-            "detection_ratio": 0,
-            "total_engines": 0,
-            "tags": [],
-            "first_seen": None,
-            "sources": []
+            "score": score,
+            "verdict": verdict,
+            "detection_ratio": vt_data.get("malicious", 0) if vt_data else otx_data.get("detection_ratio", 0),
+            "total_engines": vt_data.get("total", 0) if vt_data else 0,
+            "tags": tags,
+            "meaningful_name": vt_data.get("meaningful_name", ""),
+            "first_seen": vt_data.get("first_submitted") or otx_data.get("first_seen"),
+            "sources": sources
         }
     
     async def analyze_file_upload(self, file_data: bytes, filename: str) -> Dict[str, Any]:

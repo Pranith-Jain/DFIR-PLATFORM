@@ -8,6 +8,7 @@ import asyncio
 from providers import check_ioc_all_providers, calculate_score
 from domain import DomainChecker, ExposureScanner, FileAnalyzer
 from wiki_data import wiki_articles, wiki_content
+from actors_data import threat_actors
 
 app = FastAPI(title="DFIR Platform API", version="1.0.0")
 
@@ -327,3 +328,13 @@ async def get_research_feeds():
             except Exception:
                 results.append({"name": feed["name"], "items": [], "error": "Failed to fetch"})
     return {"feeds": results}
+@app.get("/api/v1/actors")
+def get_actors():
+    return {"actors": threat_actors}
+
+from fastapi import UploadFile, File as FastAPIFile
+
+@app.post("/api/v1/file/upload")
+async def upload_file(file: UploadFile = FastAPIFile(...)):
+    contents = await file.read()
+    return await file_analyzer.analyze_file_upload(contents, file.filename)

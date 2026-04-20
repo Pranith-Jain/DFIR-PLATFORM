@@ -38,7 +38,7 @@ interface WikiCategory {
   count: number;
 }
 
-type TabType = "home" | "ioc" | "domain" | "phishing" | "exposure" | "privacy" | "wiki" | "intel" | "research" | "actors";
+type TabType = "home" | "ioc" | "domain" | "phishing" | "exposure" | "file" | "privacy" | "wiki" | "intel" | "research" | "actors";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>("home");
@@ -47,6 +47,8 @@ export default function Home() {
   const [intelLoading, setIntelLoading] = useState(true);
   const [researchFeeds, setResearchFeeds] = useState<any[]>([]);
   const [researchLoading, setResearchLoading] = useState(true);
+  const [actors, setActors] = useState<any[]>([]);
+  const [actorsLoading, setActorsLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -60,6 +62,15 @@ export default function Home() {
       .then(r => r.json())
       .then(d => setWikiCats(d.categories || []))
       .catch(() => {});
+
+    // Fetch Actors
+    fetch("http://localhost:8000/api/v1/actors")
+      .then(r => r.json())
+      .then(d => {
+        setActors(d.actors || []);
+        setActorsLoading(false);
+      })
+      .catch(() => setActorsLoading(false));
 
     // Fetch Intel RSS feed via backend proxy
     fetch("http://localhost:8000/api/v1/intel/feed")
@@ -113,6 +124,10 @@ export default function Home() {
 
   const [privacyResult, setPrivacyResult] = useState<any>(null);
   const [privacyLoading, setPrivacyLoading] = useState(false);
+
+  const [hashInput, setHashInput] = useState("");
+  const [fileResult, setFileResult] = useState<any>(null);
+  const [fileLoading, setFileLoading] = useState(false);
 
   const checkIOC = async () => {
     if (!iocInput.trim()) return;
@@ -172,6 +187,21 @@ export default function Home() {
       setExposureResult(data);
     } catch { setExposureResult(null); }
     setExposureLoading(false);
+  };
+
+  const analyzeFile = async () => {
+    if (!hashInput.trim()) return;
+    setFileLoading(true);
+    try {
+      const res = await fetch("http://localhost:8000/api/v1/file/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hash_value: hashInput }),
+      });
+      const data = await res.json();
+      setFileResult(data);
+    } catch { setFileResult(null); }
+    setFileLoading(false);
   };
 
   async function doPrivacyCheck() {
@@ -526,6 +556,7 @@ export default function Home() {
               { id: "ioc", label: "IOC" },
               { id: "phishing", label: "Phishing" },
               { id: "exposure", label: "Exposure" },
+              { id: "file", label: "File" },
               { id: "privacy", label: "Privacy" },
               { id: "wiki", label: "Wiki" },
               { id: "intel", label: "Intel" },
@@ -570,6 +601,7 @@ export default function Home() {
                 { id: "ioc", icon: "🎯", title: "IOC Checker", desc: "Check IP, domain, URL, hash", color: "from-red-500 to-rose-500" },
                 { id: "phishing", icon: "📧", title: "Phishing Analyzer", desc: "Email header analysis", color: "from-yellow-500 to-orange-500" },
                 { id: "exposure", icon: "🔍", title: "Exposure Scanner", desc: "Subdomains, ports", color: "from-purple-500 to-fuchsia-500" },
+                { id: "file", icon: "📄", title: "File Analyzer", desc: "Hash reputation, file info", color: "from-emerald-500 to-teal-500" },
                 { id: "privacy", icon: "🔐", title: "Privacy Check", desc: "Browser fingerprint, IP leak", color: "from-teal-500 to-cyan-500" },
                 { id: "wiki", icon: "📚", title: "Security Wiki", desc: "50+ security articles", color: "from-green-500 to-emerald-500" },
                 { id: "api", icon: "⚡", title: "API Access", desc: "Programmatic access", color: "from-indigo-500 to-blue-500" },
@@ -916,6 +948,86 @@ export default function Home() {
           </div>
         )}
 
+        {activeTab === "file" && (
+          <div className="max-w-3xl mx-auto px-6">
+            <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+              <h2 className="text-2xl font-bold mb-6 font-[Poppins]">File Hash Analyzer</h2>
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={hashInput}
+                  onChange={(e) => setHashInput(e.target.value)}
+                  placeholder="MD5, SHA-1, or SHA-256 hash"
+                  className="flex-1 px-5 py-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-lg focus:outline-none focus:border-indigo-500"
+                  onKeyDown={(e) => e.key === "Enter" && analyzeFile()}
+                />
+                <button
+                  onClick={analyzeFile}
+                  disabled={fileLoading}
+                  className="px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold hover:opacity-90 transition disabled:opacity-50 font-[Poppins]"
+                >
+                  {fileLoading ? "Analyzing..." : "Analyze"}
+                </button>
+              </div>
+              {fileResult && (
+                <div className="mt-6 space-y-4">
+                  <div className="p-5 rounded-xl bg-slate-50 dark:bg-slate-800">
+                    <div className="flex justify-between items-center mb-4">
+                      <div>
+                        <p className="text-slate-500 text-sm">Verdict</p>
+                        <p className={`text-2xl font-bold font-[Poppins] ${
+                          fileResult.verdict === "malicious" ? "text-red-500" :
+                          fileResult.verdict === "suspicious" ? "text-yellow-500" : "text-green-500"
+                        }`}>
+                          {fileResult.verdict?.toUpperCase() || 'UNKNOWN'}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-slate-500 text-sm">Detection Ratio</p>
+                        <p className="text-2xl font-bold font-[Poppins]">{fileResult.detection_ratio}/{fileResult.total_engines || '?'}</p>
+                      </div>
+                    </div>
+                    {fileResult.meaningful_name && (
+                      <div className="mb-4">
+                        <p className="text-slate-500 text-sm">Likely Filename</p>
+                        <p className="font-mono text-sm">{fileResult.meaningful_name}</p>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-slate-500">Hash Type</p>
+                        <p className="uppercase">{fileResult.type}</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-500">First Seen</p>
+                        <p>{fileResult.first_seen ? new Date(fileResult.first_seen).toLocaleDateString() : 'N/A'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <h3 className="font-bold mb-3 font-[Poppins]">Intelligence Sources</h3>
+                    <div className="space-y-3">
+                      {fileResult.sources?.map((s: any, i: number) => (
+                        <div key={i} className="flex justify-between items-center text-sm">
+                          <span className="font-medium">{s.provider}</span>
+                          {s.error ? (
+                            <span className="text-slate-400">No data</span>
+                          ) : (
+                            <span className={s.malicious > 0 ? "text-red-500" : "text-green-500"}>
+                              {s.malicious || 0} detections
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {activeTab === "privacy" && (
           <div className="max-w-5xl mx-auto px-6">
             <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 mb-8">
@@ -1151,173 +1263,9 @@ export default function Home() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[
-                {
-                  name: "Storm-1747",
-                  aliases: "DEV-1747 · Sangria Tempest · Tycoon2FA",
-                  status: "Active",
-                  level: "Advanced",
-                  desc: "Financially motivated threat actor that developed Tycoon2FA, one of the most prolific PhaaS platforms. Enabled tens of millions of phishing messages reaching 500,000+ organizations monthly. March 2026 law enforcement seized 330 domains but platform resumed within days.",
-                  origin: "Unknown (likely Nigeria-based)",
-                  techniques: 25,
-                  tools: 19,
-                  color: "from-red-500 to-orange-500"
-                },
-                {
-                  name: "Rhysida",
-                  aliases: "Rhysida Ransomware · Vice Society · OysterLoader",
-                  status: "Active",
-                  level: "Intermediate",
-                  desc: "Highly active RaaS operation emerged May 2023, linked to Vice Society. 265+ victims documented. Uses multi-tiered infrastructure, typosquatting, SEO poisoning. Recent evolution includes abuse of Microsoft Trusted Signing certificates (200+ revoked) and cloud-native exfiltration via Azure tools.",
-                  origin: "Unknown (likely Eastern Europe)",
-                  techniques: 40,
-                  tools: 21,
-                  color: "from-purple-500 to-fuchsia-500"
-                },
-                {
-                  name: "BianLian",
-                  aliases: "BianLian Group · Bitter Scorpius",
-                  status: "Active",
-                  level: "Advanced",
-                  desc: "Russia-based ransomware developer and data extortion group. Active since June 2022, shifted to exfiltration-based extortion in 2023. Targets healthcare, manufacturing, professional services. Uses pressure tactics including printing ransom notes to network printers.",
-                  origin: "Unknown (Eastern Europe/Russia)",
-                  techniques: 66,
-                  tools: 30,
-                  color: "from-blue-500 to-cyan-500"
-                },
-                {
-                  name: "Qilin",
-                  aliases: "Agenda · Water Galura",
-                  status: "Active",
-                  level: "Advanced",
-                  desc: "Russia-based RaaS became most prolific globally in 2025, claiming 700+ victims. Double-extortion with 80-85% affiliate profit shares. Rust-based variants targeting Windows, Linux, ESXi. Alliance with LockBit and DragonForce. 1,000+ attacks in 2025, $50M+ ransom payments.",
-                  origin: "Unknown (Russia/Eastern Europe)",
-                  techniques: 41,
-                  tools: 29,
-                  color: "from-yellow-500 to-amber-500"
-                },
-                {
-                  name: "Clop",
-                  aliases: "Cl0p · TA505 · FIN11",
-                  status: "Active",
-                  level: "Advanced",
-                  desc: "Evolved from encryption-focused ransomware to data-theft extortion. Exploits zero-day vulnerabilities in enterprise file transfer and ERP systems. Generated $500M+ in extorted payments, compromised 11,000+ organizations. Focus on supply chain attacks.",
-                  origin: "Eastern Europe / Russia",
-                  techniques: 41,
-                  tools: 19,
-                  color: "from-green-500 to-emerald-500"
-                },
-                {
-                  name: "BlackCat",
-                  aliases: "ALPHV · Noberus",
-                  status: "Inactive",
-                  level: "Expert",
-                  desc: "ALPHV/BlackCat executed exit scam in March 2024 following Change Healthcare attack, keeping entire $22M ransom. FBI disrupted operations in Dec 2023. After closure, source code offered for $5M. Notable affiliate Scattered Spider continues with other ransomware.",
-                  origin: "Russia",
-                  techniques: 17,
-                  tools: 20,
-                  color: "from-slate-500 to-zinc-500"
-                },
-                {
-                  name: "APT41",
-                  aliases: "Double Dragon · BARIUM · Brass Typhoon",
-                  status: "Active",
-                  level: "Nation-State",
-                  desc: "Unique Chinese threat actor conducting both state-sponsored espionage and financially motivated cybercrime. Attributed to MSS contractors. Known for supply chain attacks (CCleaner 2017, ShadowPad). Exploited zero-days in Citrix, Cisco, Zoho, Fortinet, Barracuda.",
-                  origin: "China",
-                  techniques: 74,
-                  tools: 28,
-                  color: "from-red-600 to-red-400"
-                },
-                {
-                  name: "LockBit",
-                  aliases: "LockBit 2.0 · LockBit 3.0 · LockBit Black",
-                  status: "Active",
-                  level: "Expert",
-                  desc: "Highly resilient RaaS that survived multiple law enforcement disruptions. Released LockBit 5.0 in Sept 2025 with cross-platform capabilities. Over 200 victims from Dec 2025-Jan 2026. Targets U.S., India, Brazil in manufacturing, healthcare, government.",
-                  origin: "Russia",
-                  techniques: 44,
-                  tools: 15,
-                  color: "from-orange-500 to-red-500"
-                },
-                {
-                  name: "FIN7",
-                  aliases: "Carbanak · Carbon Spider · ELBRUS",
-                  status: "Active",
-                  level: "Expert",
-                  desc: "Sophisticated threat actor since 2013, targeting POS systems and payment card data. Shifted to automated attack platforms 2023-2025. Deployed Clop ransomware April 2023. Uses 4,000+ typosquatting domains. Developed AvNeutralizer EDR bypass tool.",
-                  origin: "Eastern Europe",
-                  techniques: 45,
-                  tools: 41,
-                  color: "from-indigo-500 to-purple-500"
-                },
-                {
-                  name: "Kimsuky",
-                  aliases: "Velvet Chollima · THALLIUM · Emerald Sleet",
-                  status: "Active",
-                  level: "Advanced",
-                  desc: "North Korean state-sponsored cyber espionage since 2012, operating under RGB. Focuses on South Korean government, think tanks, academics. Known for extensive social engineering, spear-phishing with North Korea policy lures. Abuses Google Drive, OneDrive, Dropbox for C2.",
-                  origin: "North Korea",
-                  techniques: 108,
-                  tools: 30,
-                  color: "from-pink-500 to-rose-500"
-                },
-                {
-                  name: "Sandworm",
-                  aliases: "Voodoo Bear · IRIDIUM · Seashell Blizzard",
-                  status: "Active",
-                  level: "Nation-State",
-                  desc: "Russia's most destructive group. 2025-2026 pivoted to exploiting misconfigured edge devices. Deployed multiple wiper malware against Polish energy infrastructure. Sustained destructive campaigns against Ukrainian critical infrastructure.",
-                  origin: "Russia",
-                  techniques: 75,
-                  tools: 49,
-                  color: "from-red-700 to-red-500"
-                },
-                {
-                  name: "Volt Typhoon",
-                  aliases: "VANGUARD PANDA · Bronze Silhouette",
-                  status: "Active",
-                  level: "Nation-State",
-                  desc: "Chinese state-sponsored actor focused on pre-positioning for disruptive operations against U.S. critical infrastructure. Active since mid-2021. Exclusively uses LOTL techniques, avoiding custom malware. Compromised SOHO routers as operational relay boxes.",
-                  origin: "China",
-                  techniques: 73,
-                  tools: 22,
-                  color: "from-yellow-600 to-orange-600"
-                },
-                {
-                  name: "Lazarus Group",
-                  aliases: "Hidden Cobra · ZINC · Diamond Sleet",
-                  status: "Active",
-                  level: "Nation-State",
-                  desc: "Significantly evolved in 2025-2026: shifted to RaaS using Medusa, executed largest crypto heist ($1.5B Bybit). AI-generated content for social engineering. 230+ malicious npm/PyPI packages. Subgroup Stonefly targets healthcare with ransomware.",
-                  origin: "North Korea",
-                  techniques: 78,
-                  tools: 55,
-                  color: "from-cyan-500 to-blue-500"
-                },
-                {
-                  name: "APT29",
-                  aliases: "Cozy Bear · The Dukes · Midnight Blizzard",
-                  status: "Active",
-                  level: "Nation-State",
-                  desc: "Russian SVR threat actor since 2008. Sophisticated cloud-native tradecraft, identity abuse, OAuth exploitation. Recent operations show patience with multi-month rapport-building campaigns. Targets government, diplomatic, technology sectors.",
-                  origin: "Russia",
-                  techniques: 74,
-                  tools: 22,
-                  color: "from-teal-500 to-green-500"
-                },
-                {
-                  name: "APT28",
-                  aliases: "Fancy Bear · Sofacy · Pawn Storm",
-                  status: "Active",
-                  level: "Nation-State",
-                  desc: "GRU Unit 26165. Rapidly weaponizes 1-day vulnerabilities (CVE-2026-21509 within 24 hours). Deploys AI-powered malware. Heavily modified Covenant framework. Major campaigns: Operation MacroMaze, Operation Neusploit. Targets Western logistics supporting Ukraine.",
-                  origin: "Russia",
-                  techniques: 56,
-                  tools: 31,
-                  color: "from-violet-500 to-purple-500"
-                },
-              ].map((actor, idx) => (
+              {actorsLoading ? (
+                <div className="col-span-full text-center py-12 text-slate-500">Loading Threat Actors...</div>
+              ) : actors.length > 0 ? actors.map((actor, idx) => (
                 <div
                   key={idx}
                   className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-500 transition-all"
@@ -1338,14 +1286,16 @@ export default function Home() {
                   <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-200 dark:border-slate-800">
                     <span>{actor.origin}</span>
                     <div className="flex gap-3">
-                      <span>{actor.techniques} techniques</span>
-                      <span>{actor.tools} tools</span>
+                      <span>{actor.techniques?.length || 0} techniques</span>
+                      <span>{actor.tools?.length || 0} tools</span>
                     </div>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <div className="col-span-full text-center py-12 text-slate-500">No actors found.</div>
+              )}
             </div>
-          </div>
+
         )}
 
         {activeTab === "research" && (
