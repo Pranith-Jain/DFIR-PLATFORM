@@ -991,22 +991,68 @@ export default function Home() {
                 </button>
               </div>
               {exposureResult && (
-                <div className="mt-6 p-5 rounded-xl bg-slate-50 dark:bg-slate-800">
-                  <div className="flex justify-between mb-4">
-                    <div>
-                      <p className="text-slate-500 text-sm">Attack Surface</p>
-                      <p className={`text-2xl font-bold font-[Poppins] ${
-                        (exposureResult as any).attack_surface_score === "high" ? "text-red-500" :
-                        (exposureResult as any).attack_surface_score === "medium" ? "text-yellow-500" : "text-green-500"
-                      }`}>
-                        {(exposureResult as any).attack_surface_score?.toUpperCase()}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-slate-500 text-sm">Open Ports</p>
-                      <p className="text-2xl font-bold font-[Poppins]">{(exposureResult as any).open_ports?.open_count || 0}</p>
+                <div className="mt-6 space-y-6">
+                  <div className="p-5 rounded-xl bg-slate-50 dark:bg-slate-800">
+                    <div className="flex justify-between mb-4">
+                      <div>
+                        <p className="text-slate-500 text-sm">Attack Surface</p>
+                        <p className={`text-2xl font-bold font-[Poppins] ${
+                          (exposureResult as any).attack_surface_score === "high" ? "text-red-500" :
+                          (exposureResult as any).attack_surface_score === "medium" ? "text-yellow-500" : "text-green-500"
+                        }`}>
+                          {(exposureResult as any).attack_surface_score?.toUpperCase()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-slate-500 text-sm">Open Ports</p>
+                        <p className="text-2xl font-bold font-[Poppins]">{(exposureResult as any).open_ports?.open_count || 0}</p>
+                      </div>
                     </div>
                   </div>
+
+                  {(exposureResult as any).open_ports?.open?.length > 0 && (
+                    <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-800">
+                      <h3 className="font-bold mb-3 font-[Poppins]">Open Ports</h3>
+                      <div className="grid grid-cols-2 gap-3">
+                        {(exposureResult as any).open_ports.open.map((p: any, i: number) => (
+                          <div key={i} className="flex items-center gap-2 text-sm p-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                            <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                            <span className="font-mono font-semibold">{p.port}</span>
+                            <span className="text-slate-500">{p.service}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {(exposureResult as any).security_headers && (
+                    <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-800">
+                      <h3 className="font-bold mb-3 font-[Poppins]">Security Headers</h3>
+                      <div className="space-y-2">
+                        {Object.entries((exposureResult as any).security_headers).map(([name, data]: [string, any], i: number) => (
+                          <div key={i} className="flex justify-between items-start text-sm">
+                            <span className="text-slate-600 dark:text-slate-400 font-mono text-xs">{name}</span>
+                            <span className={data.present ? "text-green-500" : "text-red-500"}>
+                              {data.present ? "Present" : "Missing"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {(exposureResult as any).subdomains?.length > 0 && (
+                    <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-800">
+                      <h3 className="font-bold mb-3 font-[Poppins]">Discovered Subdomains ({(exposureResult as any).subdomains.length})</h3>
+                      <div className="max-h-60 overflow-y-auto space-y-1">
+                        {(exposureResult as any).subdomains.map((sub: string, i: number) => (
+                          <div key={i} className="text-sm font-mono text-slate-600 dark:text-slate-400 p-1 hover:bg-slate-50 dark:hover:bg-slate-900 rounded">
+                            {sub}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

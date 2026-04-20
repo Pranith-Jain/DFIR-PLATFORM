@@ -418,5 +418,300 @@ Ransomware is a type of malware that encrypts a victim's files. The attacker the
 3. Employee security awareness training
 4. Segmenting networks
         """
+    },
+    "arc-authentication": {
+        "title": "ARC Authentication",
+        "category": "Email Security",
+        "content": """
+## What is ARC?
+
+Authenticated Received Chain (ARC) is an email authentication system designed to allow intermediate mail servers (like mailing lists or forwarding services) to sign an email's original authentication results.
+
+## Why is ARC needed?
+
+When an email is forwarded, SPF and DKIM signatures often break because the sending IP changes or the headers/content are modified. This causes the final recipient to see the email as unauthenticated.
+
+## How ARC Works
+
+1. The first server validates SPF, DKIM, and DMARC.
+2. It then adds an ARC-Seal, ARC-Message-Signature, and ARC-Authentication-Results header.
+3. Subsequent servers repeat this process, creating a chain of trust.
+4. The final server can verify the entire chain and trust the original results even if SPF/DKIM fail at the final hop.
+
+## ARC Header Components
+
+- **ARC-Authentication-Results (AAR)**: Records the results of the authentication checks.
+- **ARC-Message-Signature (AMS)**: A signature of the message.
+- **ARC-Seal (AS)**: A signature of the ARC headers themselves.
+        """
+    },
+    "email-header-analysis": {
+        "title": "Email Header Analysis",
+        "category": "Email Security",
+        "content": """
+## Introduction to Email Headers
+
+Email headers contain metadata about an email message, including the sender, recipient, path taken through mail servers, and authentication results.
+
+## Critical Headers to Analyze
+
+- **Received**: Shows each mail server the message passed through. Read from bottom to top to trace the path.
+- **From / To / CC / BCC**: Basic message routing information.
+- **Reply-To**: Often used in phishing to direct replies to an attacker-controlled address.
+- **Return-Path**: Where bounce messages are sent. Should match the 'From' domain.
+- **X-Mailer / User-Agent**: The software used to send the email.
+- **Authentication-Results**: Summary of SPF, DKIM, and DMARC checks.
+
+## Analysis Steps
+
+1. Verify sender authenticity (SPF/DKIM/DMARC).
+2. Check for discrepancies between the 'From' address and 'Return-Path'.
+3. Examine the 'Received' chain for suspicious IP addresses or hops.
+4. Look for anomalous X-headers added by security filters.
+        """
+    },
+    "homoglyph-domains": {
+        "title": "Homoglyph Domains",
+        "category": "Email Security",
+        "content": """
+## What are Homoglyph Domains?
+
+Homoglyph domains (or IDN homograph attacks) are domains that use characters from different alphabets that look similar or identical to standard Latin characters to impersonate legitimate domains.
+
+## Examples
+
+- `googIe.com` (using a capital 'I' instead of 'l')
+- `аррӏе.com` (using Cyrillic 'а', 'р', and 'е')
+- `microsoft.com` (using a zero '0' instead of 'o' - technically a 'typosquat' but often grouped here)
+
+## Punycode
+
+To support these characters in the DNS system, they are converted to Punycode, which starts with `xn--`.
+
+Example: `аррӏе.com` -> `xn--80ak6aa92e.com`
+
+## Detection and Prevention
+
+- Modern browsers often show the Punycode version if they suspect a homograph attack.
+- Organizations should monitor for registered 'look-alike' domains.
+- Users should be trained to use password managers, which are not fooled by visual similarity.
+        """
+    },
+    "indicators-of-compromise": {
+        "title": "Indicators of Compromise (IOCs)",
+        "category": "Threat Intelligence",
+        "content": """
+## What are IOCs?
+
+Indicators of Compromise (IOCs) are digital artifacts or breadcrumbs left behind after a security breach or malicious activity.
+
+## Types of IOCs
+
+1. **Network-based**: IP addresses, domains, URLs, traffic patterns.
+2. **Host-based**: File hashes (MD5, SHA256), filenames, registry keys, mutexes.
+3. **Behavioral**: Unusual account login times, large data transfers, abnormal command line execution.
+
+## The Pyramid of Pain
+
+David Bianco's 'Pyramid of Pain' ranks IOCs by how difficult they are for an attacker to change:
+- **Hash Values**: Trivial for attackers to change (Easy).
+- **IP Addresses**: Relatively easy to rotate (Easy).
+- **Domain Names**: Slightly harder to change (Simple).
+- **Network/Host Artifacts**: Requires significant changes to tools (Annoying).
+- **Tools**: Hard to swap out entire toolsets (Challenging).
+- **TTPs (Tactics, Techniques, and Procedures)**: Hardest to change as it's the attacker's methodology (Tough).
+        """
+    },
+    "threat-intelligence": {
+        "title": "Threat Intelligence",
+        "category": "Threat Intelligence",
+        "content": """
+## What is Threat Intelligence?
+
+Threat Intelligence is evidence-based knowledge, including context, mechanisms, indicators, implications, and actionable advice, about an existing or emerging menace or hazard to assets.
+
+## The Threat Intelligence Cycle
+
+1. **Planning & Direction**: Defining requirements and objectives.
+2. **Collection**: Gathering data from various sources (OSINT, commercial, internal).
+3. **Processing**: Normalizing and organizing the data.
+4. **Analysis & Production**: Turning data into actionable intelligence.
+5. **Dissemination**: Sharing intelligence with stakeholders.
+6. **Feedback**: Improving the process based on results.
+
+## Types of Intelligence
+
+- **Strategic**: High-level, focused on trends and long-term risk.
+- **Operational**: Focused on specific incoming attacks and actor campaigns.
+- **Tactical**: Focused on TTPs and real-time indicators (IOCs).
+- **Technical**: Technical data such as malware samples or vulnerability details.
+        """
+    },
+    "phishing-analysis": {
+        "title": "Phishing Analysis",
+        "category": "Forensics",
+        "content": """
+## Phishing Analysis Workflow
+
+Analyzing a suspected phishing email involves several forensic steps to determine intent, origin, and impact.
+
+## 1. Header Analysis
+Check SPF/DKIM/DMARC results. Trace the 'Received' chain to find the true source IP.
+
+## 2. Link Analysis
+Defang and examine URLs. Check for link-display mismatches. Analyze redirects and destination page content in a sandbox.
+
+## 3. Attachment Analysis
+Calculate hashes of attachments and check reputation (VirusTotal). Perform static and dynamic analysis in a malware sandbox.
+
+## 4. Content Analysis
+Look for social engineering triggers: urgency, fear, financial lures, or impersonation of trusted brands.
+
+## 5. Decision & Response
+Categorize as 'Phishing', 'Spam', or 'Clean'. Block IOCs at the gateway, purge similar emails from mailboxes, and reset compromised credentials.
+        """
+    },
+    "digital-forensics": {
+        "title": "Digital Forensics",
+        "category": "Forensics",
+        "content": """
+## Principles of Digital Forensics
+
+Digital Forensics is the process of identifying, preserving, analyzing, and presenting digital evidence in a legally admissible manner.
+
+## Key Concepts
+
+- **Chain of Custody**: Documenting the history of evidence from collection to court.
+- **Evidence Integrity**: Ensuring evidence hasn't been altered (using hashes).
+- **Volatility Order**: Collecting evidence starting from the most volatile (RAM) to the least (Hard drives/Backup).
+
+## Forensic Branches
+
+- **Disk Forensics**: Analyzing data on physical storage media.
+- **Memory Forensics**: Analyzing volatile RAM for running processes, network connections, and keys.
+- **Network Forensics**: Analyzing traffic logs and packet captures (PCAP).
+- **Cloud Forensics**: Analyzing logs and artifacts from cloud environments (AWS/Azure/GCP).
+- **Mobile Forensics**: Analyzing data from smartphones and tablets.
+        """
+    },
+    "incident-response": {
+        "title": "Incident Response",
+        "category": "Forensics",
+        "content": """
+## The Incident Response Lifecycle (NIST)
+
+1. **Preparation**: Establishing tools, team (CSIRT), and playbooks.
+2. **Detection & Analysis**: Identifying signs of an incident and assessing its scope.
+3. **Containment, Eradication, & Recovery**: Stopping the threat, removing it from the environment, and restoring systems.
+4. **Post-Incident Activity**: Conducting a 'Lessons Learned' session and documenting the final report.
+
+## The PICERL Model (SANS)
+
+- **Preparation**
+- **Identification**
+- **Containment**
+- **Eradication**
+- **Recovery**
+- **Lessons Learned**
+
+## Common IR Artifacts
+
+- Process lists and parent-child relationships.
+- Network connection logs.
+- Registry persistence mechanisms.
+- Event logs (Security, System, PowerShell).
+- Prefetch/Shimcache for execution history.
+        """
+    },
+    "yara-rules": {
+        "title": "YARA Rules",
+        "category": "Detection Engineering",
+        "content": """
+## What is YARA?
+
+YARA is a tool aimed at (but not limited to) helping malware researchers to identify and classify malware samples. It uses a rule-based approach to search for patterns in files or process memory.
+
+## Rule Structure
+
+```yara
+rule ExampleMalware {
+    meta:
+        description = "Detects example malware strings"
+        author = "Security Researcher"
+    strings:
+        $s1 = "malicious_function_name"
+        $s2 = { E2 34 A1 C2 78 } // Hex string
+        $r1 = /https?:\/\/evil\.com\/[a-z]{5}/ // Regex
+    condition:
+        any of ($s*) and $r1
+}
+```
+
+## Use Cases
+
+- Malware identification and classification.
+- Scanning files during incident response.
+- Memory scanning for injected code.
+- Email attachment scanning.
+        """
+    },
+    "sigma-rules": {
+        "title": "Sigma Rules",
+        "category": "Detection Engineering",
+        "content": """
+## What is Sigma?
+
+Sigma is a generic and open signature format that allows you to describe relevant log events in a straightforward manner. It is to logs what YARA is to files and Snort is to network traffic.
+
+## Why Sigma?
+
+Security teams often struggle with different SIEM vendors using proprietary query languages. Sigma allows you to write a rule once and convert it to many targets (Splunk, Elasticsearch, Sentinel, QRadar).
+
+## Rule Structure
+
+```yaml
+title: Suspicious Process Execution
+status: experimental
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection:
+        Image|endswith: '\cmd.exe'
+        CommandLine|contains: '/c echo '
+    condition: selection
+falsepositives:
+    - Administrative scripts
+level: medium
+```
+
+## Conversion
+
+Sigma rules are converted using `sigmac` or `pySigma` into queries specific to your target platform.
+        """
+    },
+    "bec": {
+        "title": "Business Email Compromise (BEC)",
+        "category": "Attack Types",
+        "content": """
+## What is BEC?
+
+Business Email Compromise (BEC) is a sophisticated form of cybercrime where attackers use email fraud to target organizations for financial gain. Unlike standard phishing, BEC rarely uses malware, relying instead on social engineering.
+
+## Common BEC Scenarios
+
+1. **CEO Fraud**: Impersonating a high-level executive to request an urgent wire transfer.
+2. **Invoice Schemes**: Impersonating a vendor to request payment to a new (attacker-controlled) bank account.
+3. **Attorney Impersonation**: Contacting employees while claiming to handle confidential or time-sensitive legal matters.
+4. **Data Theft**: Requesting HR or payroll data (like W-2s) for identity theft.
+
+## BEC Prevention
+
+- Implement robust email authentication (SPF, DKIM, DMARC).
+- Use multi-factor authentication (MFA) on all email accounts.
+- Establish out-of-band verification procedures for any financial requests.
+- Employee awareness training on social engineering tactics.
+        """
     }
 }
+

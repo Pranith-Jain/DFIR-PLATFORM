@@ -610,18 +610,44 @@ class ExposureScanner:
             self.enumerate_subdomains(domain),
             self.scan_common_ports(domain),
             self.check_cdn_detection(domain),
+            self.check_security_headers(domain),
             return_exceptions=True
         )
         
-        subdomains, ports, cdn_info = results
+        subdomains, ports, cdn_info, security_headers = results
         
         return {
             "domain": domain,
             "subdomains": subdomains,
             "open_ports": ports,
             "cdn": cdn_info,
+            "security_headers": security_headers,
             "attack_surface_score": self.calculate_attack_surface_score(ports, subdomains)
         }
+    
+    async def check_security_headers(self, domain: str) -> Dict[str, Any]:
+        url = f"https://{domain}"
+        headers_to_check = [
+            "Strict-Transport-Security",
+            "Content-Security-Policy",
+            "X-Frame-Options",
+            "X-Content-Type-Options",
+            "Referrer-Policy",
+            "Permissions-Policy"
+        ]
+        
+        results = {}
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, timeout=10, allow_redirects=True) as response:
+                    for header in headers_to_check:
+                        results[header] = {
+                            "present": header in response.headers,
+                            "value": response.headers.get(header, "")
+                        }
+            return results
+        except Exception as e:
+            return {"error": str(e)}
     
     async def enumerate_subdomains(self, domain: str) -> List[str]:
         # Check for wildcard DNS first
@@ -648,7 +674,29 @@ class ExposureScanner:
                     'firewall', 'gateway', 'proxy', 'lb', 'loadbalancer', 'nas', 'storage',
                     'db', 'database', 'sql', 'mysql', 'postgre', 'mongodb', 'redis',
                     'es', 'elastic', 'search', 'jenkins', 'ci', 'cd', 'deploy', 'k8s', 'kube',
-                    'docker', 'registry', 'ansible', 'puppet', 'chef', 'splunk', 'elk', 'logs']
+                    'docker', 'registry', 'ansible', 'puppet', 'chef', 'splunk', 'elk', 'logs',
+                    'mta-sts', 'autodiscover', 'lyncdiscover', 'sip', 'vpn', 'gw', 'webhop',
+                    'mobile', 'm', 'msg', 'secure', 'web', 'mailhost', 'mailserver', 'relay',
+                    'mta', 'mx', 'smtp', 'pop3', 'imap', 'webmail', 'exchange', 'outlook',
+                    'owa', 'autodiscover', 'lyncdiscover', 'sip', 'vpn', 'gw', 'webhop',
+                    'mobile', 'm', 'msg', 'secure', 'web', 'mailhost', 'mailserver', 'relay',
+                    'mta', 'mx', 'smtp', 'pop3', 'imap', 'webmail', 'exchange', 'outlook',
+                    'owa', 'ns', 'ns1', 'ns2', 'ns3', 'ns4', 'ns5', 'dns', 'dns1', 'dns2',
+                    'dns3', 'dev', 'test', 'stage', 'staging', 'prod', 'production', 'lab',
+                    'internal', 'intranet', 'local', 'corp', 'office', 'guest', 'wifi',
+                    'api', 'v1', 'v2', 'v3', 'endpoint', 'ws', 'graphql', 'auth', 'login',
+                    'sso', 'portal', 'account', 'profile', 'admin', 'administrator', 'root',
+                    'manage', 'console', 'dashboard', 'panel', 'cpanel', 'whm', 'plesk',
+                    'directadmin', 'webmin', 'ssh', 'ftp', 'sftp', 'rsync', 'svn', 'git',
+                    'gitlab', 'github', 'bitbucket', 'jira', 'confluence', 'wiki', 'docs',
+                    'help', 'support', 'billing', 'shop', 'store', 'e-commerce', 'cart',
+                    'checkout', 'cdn', 'static', 'assets', 'img', 'images', 'js', 'css',
+                    'media', 'upload', 'download', 'files', 'storage', 'backups', 'backup',
+                    'db', 'database', 'sql', 'mysql', 'postgresql', 'redis', 'mongodb',
+                    'elastic', 'elasticsearch', 'search', 'solr', 'kibana', 'grafana',
+                    'prometheus', 'zabbix', 'nagios', 'monitoring', 'status', 'logs',
+                    'elk', 'splunk', 'graylog', 'jenkins', 'ci', 'cd', 'travis', 'circleci',
+                    'docker', 'kubernetes', 'k8s', 'registry', 'ansible', 'puppet', 'chef']
         
         found = []
         
@@ -670,13 +718,15 @@ class ExposureScanner:
         return sorted(list(set(found)))
     
     async def scan_common_ports(self, domain: str) -> Dict[str, Any]:
-        ports = [21, 22, 23, 25, 53, 80, 110, 143, 443, 445, 465, 587, 993, 995, 3306, 3389, 5432, 8080, 8443, 27017]
+        ports = [21, 22, 23, 25, 53, 80, 110, 143, 443, 445, 465, 587, 993, 995, 1433, 1521, 3306, 3389, 5432, 5900, 6379, 8000, 8080, 8443, 9000, 9200, 27017]
         port_names = {
             21: "FTP", 22: "SSH", 23: "Telnet", 25: "SMTP", 53: "DNS",
             80: "HTTP", 110: "POP3", 143: "IMAP", 443: "HTTPS", 445: "SMB",
             465: "SMTPS", 587: "Submission", 993: "IMAPS", 995: "POP3S",
-            3306: "MySQL", 3389: "RDP", 5432: "PostgreSQL",
-            8080: "HTTP-Alt", 8443: "HTTPS-Alt", 27017: "MongoDB"
+            1433: "MSSQL", 1521: "Oracle", 3306: "MySQL", 3389: "RDP", 
+            5432: "PostgreSQL", 5900: "VNC", 6379: "Redis",
+            8000: "HTTP-Alt", 8080: "HTTP-Alt", 8443: "HTTPS-Alt", 
+            9000: "FastCGI", 9200: "Elasticsearch", 27017: "MongoDB"
         }
         
         open_ports = []
@@ -782,9 +832,20 @@ class FileAnalyzer:
         sha256 = hashlib.sha256(file_data).hexdigest()
         
         import magic
-        mime = magic.from_buffer(file_data[:1024], mime=True)
+        try:
+            mime = magic.from_buffer(file_data[:2048], mime=True)
+        except:
+            mime = "application/octet-stream"
         
-        suspicious_extensions = ['.exe', '.scr', '.bat', '.vbs', '.js', '.jar', '.com', '.pif', '.msi', '.hta']
+        reputation = await self.analyze_hash(sha256)
+        
+        suspicious_extensions = [".exe", ".scr", ".bat", ".vbs", ".js", ".jar", ".com", ".pif", ".msi", ".hta", ".iso", ".img"]
+        
+        is_suspicious_ext = any(filename.lower().endswith(ext) for ext in suspicious_extensions)
+        
+        final_verdict = reputation.get("verdict", "unknown")
+        if final_verdict == "clean" and is_suspicious_ext:
+            final_verdict = "suspicious"
         
         return {
             "filename": filename,
@@ -793,7 +854,8 @@ class FileAnalyzer:
             "md5": md5,
             "sha1": sha1,
             "sha256": sha256,
-            "suspicious_extension": any(filename.endswith(ext) for ext in suspicious_extensions),
-            "verdict": "requires-upload",
-            "recommendation": "Upload to sandbox for analysis"
+            "suspicious_extension": is_suspicious_ext,
+            "reputation": reputation,
+            "verdict": final_verdict,
+            "recommendation": "Malicious file detected" if final_verdict == "malicious" else "Suspicious file detected" if final_verdict == "suspicious" else "No immediate threats found in intelligence databases"
         }

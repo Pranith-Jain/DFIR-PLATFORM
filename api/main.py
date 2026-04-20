@@ -79,31 +79,45 @@ def detect_ioc_type(indicator: str) -> str:
     return "unknown"
 
 def check_typosquatting(domain: str) -> List[str]:
-    common_brands = ['google', 'microsoft', 'apple', 'amazon', 'netflix', 'paypal', 'facebook', 'instagram', 'twitter', 'linkedin', 'github', 'adobe', 'dropbox', 'slack', 'zoom', 'webex', 'office365', 'outlook', 'protonmail', 'gmail', 'yahoo', 'aol', 'icloud', 'binance', 'coinbase', 'kraken', 'metamask', 'ledger', 'trezor']
+    common_brands = [
+        'google', 'microsoft', 'apple', 'amazon', 'netflix', 'paypal', 'facebook', 
+        'instagram', 'twitter', 'linkedin', 'github', 'adobe', 'dropbox', 'slack', 
+        'zoom', 'webex', 'office365', 'outlook', 'protonmail', 'gmail', 'yahoo', 
+        'aol', 'icloud', 'binance', 'coinbase', 'kraken', 'metamask', 'ledger', 'trezor',
+        'chase', 'bankofamerica', 'wellsfargo', 'citi', 'hsbc', 'barclays', 'standardchartered',
+        'visa', 'mastercard', 'americanexpress', 'discover', 'stripe', 'paypal'
+    ]
     
     domain_parts = domain.lower().split('.')
     if not domain_parts:
         return []
     
-    name = domain_parts[0]
+    # Check all parts of the domain for brand names
     alerts = []
     
-    for brand in common_brands:
-        if name == brand:
-            continue
-        
-        # Check for simple additions
-        if brand in name:
-            alerts.append(f"possible-typosquatting:{brand}")
-            continue
+    for part in domain_parts:
+        for brand in common_brands:
+            if part == brand:
+                continue
             
-        # Levenshtein distance-like check (simple)
-        if len(name) == len(brand):
-            diffs = sum(1 for a, b in zip(name, brand) if a != b)
-            if diffs == 1:
+            # 1. Inclusion (e.g., login-google.com)
+            if brand in part:
                 alerts.append(f"possible-typosquatting:{brand}")
+                continue
+                
+            # 2. Levenshtein-like check for small distances
+            if len(part) >= 3 and len(brand) >= 3:
+                # Transposition (e.g., gogle.com)
+                if len(part) == len(brand):
+                    diffs = sum(1 for a, b in zip(part, brand) if a != b)
+                    if diffs <= 2: # Allowed 1 or 2 character difference
+                        alerts.append(f"possible-typosquatting:{brand}")
+                # Omission or Addition (e.g., googl.com or gooogle.com)
+                elif abs(len(part) - len(brand)) == 1:
+                    if brand in part or part in brand:
+                        alerts.append(f"possible-typosquatting:{brand}")
     
-    return alerts
+    return list(set(alerts))
 
 @app.get("/")
 def root():
