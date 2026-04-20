@@ -345,5 +345,78 @@ DMARC builds on SPF and DKIM to give domain owners control over how unauthentica
 
 v=DMARC1; p=reject; rua=mailto:dmarc@example.com;ruf=mailto:forensic@example.com;fo=1
         """
+    },
+    "ioc-enrichment": {
+        "title": "IOC Enrichment",
+        "category": "Threat Intelligence",
+        "content": """
+## What is IOC Enrichment?
+
+IOC Enrichment is the process of adding context to raw indicators of compromise (IOCs) like IP addresses, domains, and file hashes.
+
+## Why is it important?
+
+Raw indicators by themselves often lack the context needed for effective incident response. Enrichment provides:
+- Reputation scores
+- Geographical information
+- Associated threat actors
+- Malware family names
+- Historic behavior
+
+## Sources for Enrichment
+
+Common sources include:
+- VirusTotal
+- AbuseIPDB
+- AlienVault OTX
+- Shodan
+- GreyNoise
+        """
+    },
+    "mitre-attack": {
+        "title": "MITRE ATT&CK Framework",
+        "category": "Detection Engineering",
+        "content": """
+## What is MITRE ATT&CK?
+
+MITRE ATT&CK is a globally accessible knowledge base of adversary tactics and techniques based on real-world observations.
+
+## Core Components
+
+- **Tactics**: The 'why' (e.g., Initial Access, Execution, Persistence)
+- **Techniques**: The 'how' (e.g., Phishing, Scripting, DLL Injection)
+- **Sub-techniques**: More specific descriptions of techniques
+- **Groups**: Threat actors and their known campaigns
+- **Software**: Tools used by adversaries
+
+## Use Cases
+
+- Adversary emulation
+- Red teaming
+- Behavioral detection development
+- Defensive gap analysis
+        """
+    },
+    "ransomware": {
+        "title": "Ransomware",
+        "category": "Attack Types",
+        "content": """
+## What is Ransomware?
+
+Ransomware is a type of malware that encrypts a victim's files. The attacker then demands a ransom from the victim to restore access to the data.
+
+## Modern Trends
+
+- **Double Extortion**: Stealing data before encrypting it and threatening to leak it.
+- **Ransomware-as-a-Service (RaaS)**: Affiliate programs where developers lease malware to other criminals.
+- **Triple Extortion**: Adding DDoS attacks or contacting the victim's customers/clients.
+
+## Mitigation Strategies
+
+1. Regular offline backups
+2. Endpoint protection (EDR)
+3. Employee security awareness training
+4. Segmenting networks
+        """
     }
 }

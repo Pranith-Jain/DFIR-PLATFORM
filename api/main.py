@@ -1,9 +1,12 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File as FastAPIFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import re
 import asyncio
+import os
+import httpx
+from xml.etree import ElementTree
 
 from providers import check_ioc_all_providers, calculate_score
 from domain import DomainChecker, ExposureScanner, FileAnalyzer
@@ -75,6 +78,33 @@ def detect_ioc_type(indicator: str) -> str:
         return "domain"
     return "unknown"
 
+def check_typosquatting(domain: str) -> List[str]:
+    common_brands = ['google', 'microsoft', 'apple', 'amazon', 'netflix', 'paypal', 'facebook', 'instagram', 'twitter', 'linkedin', 'github', 'adobe', 'dropbox', 'slack', 'zoom', 'webex', 'office365', 'outlook', 'protonmail', 'gmail', 'yahoo', 'aol', 'icloud', 'binance', 'coinbase', 'kraken', 'metamask', 'ledger', 'trezor']
+    
+    domain_parts = domain.lower().split('.')
+    if not domain_parts:
+        return []
+    
+    name = domain_parts[0]
+    alerts = []
+    
+    for brand in common_brands:
+        if name == brand:
+            continue
+        
+        # Check for simple additions
+        if brand in name:
+            alerts.append(f"possible-typosquatting:{brand}")
+            continue
+            
+        # Levenshtein distance-like check (simple)
+        if len(name) == len(brand):
+            diffs = sum(1 for a, b in zip(name, brand) if a != b)
+            if diffs == 1:
+                alerts.append(f"possible-typosquatting:{brand}")
+    
+    return alerts
+
 @app.get("/")
 def root():
     return {"status": "ok", "service": "DFIR Platform API", "version": "1.0.0"}
@@ -114,37 +144,57 @@ def analyze_phishing(request: PhishingRequest):
     verdict = "clean"
     confidence = 95
     
-    urgency_keywords = ['urgent', 'immediately', 'suspend', 'locked', 'verify', 'unauthorized', 'action required']
+    urgency_keywords = ['urgent', 'immediately', 'suspend', 'locked', 'verify', 'unauthorized', 'action required', 'expires in']
     if any(kw in email_content.lower() for kw in urgency_keywords):
         tags.append("urgency-language")
         verdict = "suspicious"
         confidence = min(confidence - 30, 60)
     
-    financial_keywords = ['invoice', 'payment', 'wire transfer', 'bank', 'account update', 'balance']
+    financial_keywords = ['invoice', 'payment', 'wire transfer', 'bank', 'account update', 'balance', 'transaction']
     if any(kw in email_content.lower() for kw in financial_keywords):
         tags.append("financial-context")
         if verdict == "suspicious":
             verdict = "malicious"
             confidence = min(confidence - 20, 70)
-    
+        else:
+            verdict = "suspicious"
+            confidence = min(confidence, 75)
+
     extracted_iocs = []
     
+    # URL extraction
     url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+'
     urls = re.findall(url_pattern, email_content)
     for url in urls[:5]:
         extracted_iocs.append({"type": "url", "value": url})
+        # Check for typosquatting in URLs
+        try:
+            domain = urlparse(url).netloc
+            typo_alerts = check_typosquatting(domain)
+            if typo_alerts:
+                tags.extend(typo_alerts)
+                verdict = "malicious"
+        except:
+            pass
     
+    # IP extraction
     ip_pattern = r'\b(?:\d{1,3}\.){3}\d{1,3}\b'
     ips = re.findall(ip_pattern, email_content)
     for ip in ips[:5]:
         if not ip.startswith('0.') and not ip.startswith('255.'):
             extracted_iocs.append({"type": "ipv4", "value": ip})
     
+    # Domain extraction
     domain_pattern = r'[a-zA-Z0-9][-a-zA-Z0-9]*\.(?:com|org|net|io|co|ru|cn|xyz|info|biz|tk|ml|ga|cf|gq|pw|cc|ws|top|site|online|club|fun|tech|pro)'
     domains = re.findall(domain_pattern, email_content.lower())
     for domain in set(domains[:5]):
         extracted_iocs.append({"type": "domain", "value": domain})
+        typo_alerts = check_typosquatting(domain)
+        if typo_alerts:
+            tags.extend(typo_alerts)
+            verdict = "malicious"
     
+    # Hash extraction
     hash_patterns = [
         r'\b[0-9a-fA-F]{32}\b',
         r'\b[0-9a-fA-F]{40}\b',
@@ -157,7 +207,7 @@ def analyze_phishing(request: PhishingRequest):
             h_type = "md5" if length == 32 else "sha1" if length == 40 else "sha256"
             extracted_iocs.append({"type": h_type, "value": h})
     
-    suspicious_attachments = ['.exe', '.scr', '.bat', '.vbs', '.js', '.jar', '.zip', '.rar']
+    suspicious_attachments = ['.exe', '.scr', '.bat', '.vbs', '.js', '.jar', '.zip', '.rar', '.iso', '.img']
     for ext in suspicious_attachments:
         if ext in email_content.lower():
             tags.append(f"suspicious-attachment:{ext}")
@@ -168,21 +218,28 @@ def analyze_phishing(request: PhishingRequest):
         verdict = "malicious"
         confidence = max(confidence - 25, 75)
     
-    suspicious_tlds = ['.tk', '.ml', '.ga', '.cf', '.gq', '.pw', '.cc', '.xyz', '.top']
+    suspicious_tlds = ['.tk', '.ml', '.ga', '.cf', '.gq', '.pw', '.cc', '.xyz', '.top', '.click']
     for ioc in extracted_iocs:
         if ioc.get('type') == 'domain':
             domain = ioc.get('value', '')
             if any(domain.endswith(tld) for tld in suspicious_tlds):
                 tags.append("suspicious-tld")
+                verdict = "malicious" if verdict != "malicious" else verdict
                 break
     
+    # Final verdict adjustment
+    if auth_results['spf'] == 'fail' or auth_results['dmarc'] == 'fail':
+        tags.append("authentication-failed")
+        verdict = "malicious"
+        confidence = min(confidence + 10, 100)
+
     return PhishingResponse(
         success=True,
         verdict=verdict,
         confidence=confidence,
         auth_results=auth_results,
         extracted_iocs=extracted_iocs,
-        tags=tags,
+        tags=list(set(tags)),
         credits_used=1
     )
 
@@ -212,9 +269,13 @@ def analyze_dmarc(email_content: str) -> str:
 def check_link_display_mismatch(email_content: str) -> bool:
     link_pattern = r'<a[^>]*href=["\']([^"\']+)["\'][^>]*>([^<]+)</a>'
     matches = re.findall(link_pattern, email_content, re.IGNORECASE)
+    from urllib.parse import urlparse
     for href, text in matches:
         text_clean = text.replace('[.]', '.').replace('[dot]', '.').strip()
-        if href and text_clean and text_clean not in href:
+        if not text_clean: continue
+        
+        # If text looks like a URL but different from href
+        if ('.' in text_clean or 'http' in text_clean.lower()) and text_clean not in href:
             return True
     return False
 
@@ -282,9 +343,6 @@ def get_wiki_article(slug: str):
                 return {"title": article["title"], "description": article["description"], "slug": slug}
     return {"error": "Article not found"}
 
-import os
-import httpx
-
 @app.get("/api/v1/intel/feed")
 async def get_intel_feed():
     try:
@@ -310,7 +368,6 @@ async def get_research_feeds():
         for feed in feeds:
             try:
                 response = await client.get(feed["url"])
-                from xml.etree import ElementTree
                 root = ElementTree.fromstring(response.text)
                 items = []
                 for item in root.findall(".//item")[:5]:
@@ -328,11 +385,10 @@ async def get_research_feeds():
             except Exception:
                 results.append({"name": feed["name"], "items": [], "error": "Failed to fetch"})
     return {"feeds": results}
+
 @app.get("/api/v1/actors")
 def get_actors():
     return {"actors": threat_actors}
-
-from fastapi import UploadFile, File as FastAPIFile
 
 @app.post("/api/v1/file/upload")
 async def upload_file(file: UploadFile = FastAPIFile(...)):
