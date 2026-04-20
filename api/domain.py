@@ -3,6 +3,7 @@ import aiohttp
 import socket
 import ssl
 import re
+import uuid
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 import whois
@@ -623,10 +624,31 @@ class ExposureScanner:
         }
     
     async def enumerate_subdomains(self, domain: str) -> List[str]:
+        # Check for wildcard DNS first
+        is_wildcard = False
+        try:
+            wildcard_test = f"wildcard-test-{uuid.uuid4().hex[:8]}.{domain}"
+            self.resolver.resolve(wildcard_test, 'A')
+            is_wildcard = True
+        except:
+            pass
+
+        if is_wildcard:
+            return ["Wildcard DNS detected - exhaustive subdomain enumeration skipped"]
+
         common_subs = ['www', 'mail', 'ftp', 'localhost', 'webmail', 'smtp', 'pop', 'ns1', 'webdisk', 
                     'ns2', 'oaut', 'oauth', 'docs', 'm', 'blog', 'pop3', 'dev', 'www2', 'admin',
                     'forum', 'news', 'vpn', 'ns3', 'test', 'mx1', 'mx2', 'email', 'cvs', 'gitlab',
-                    'jenkins', 'prod', 'qa', 'stage', 'cdn', 'static', 'assets', 'backup', 'mail2']
+                    'jenkins', 'prod', 'qa', 'stage', 'cdn', 'static', 'assets', 'backup', 'mail2',
+                    'shop', 'api', 'app', 'status', 'help', 'support', 'billing', 'my', 'portal',
+                    'direct', 'cloud', 'secure', 'auth', 'login', 'internal', 'dev-api', 'staging',
+                    'demo', 'beta', 'git', 'svn', 'jira', 'confluence', 'wiki', 'monitoring',
+                    'grafana', 'prometheus', 'zabbix', 'nagios', 'cpanel', 'whm', 'plesk',
+                    'remote', 'connect', 'autodiscover', 'owa', 'exchange', 'sip', 'vpx',
+                    'firewall', 'gateway', 'proxy', 'lb', 'loadbalancer', 'nas', 'storage',
+                    'db', 'database', 'sql', 'mysql', 'postgre', 'mongodb', 'redis',
+                    'es', 'elastic', 'search', 'jenkins', 'ci', 'cd', 'deploy', 'k8s', 'kube',
+                    'docker', 'registry', 'ansible', 'puppet', 'chef', 'splunk', 'elk', 'logs']
         
         found = []
         
@@ -638,10 +660,14 @@ class ExposureScanner:
             except:
                 return None
         
-        results = await asyncio.gather(*[check_sub(s) for s in common_subs])
-        found = [r for r in results if r]
+        # Split into batches to avoid overwhelming the resolver
+        chunk_size = 20
+        for i in range(0, len(common_subs), chunk_size):
+            chunk = common_subs[i:i + chunk_size]
+            results = await asyncio.gather(*[check_sub(s) for s in chunk])
+            found.extend([r for r in results if r])
         
-        return found
+        return sorted(list(set(found)))
     
     async def scan_common_ports(self, domain: str) -> Dict[str, Any]:
         ports = [21, 22, 23, 25, 53, 80, 110, 143, 443, 445, 465, 587, 993, 995, 3306, 3389, 5432, 8080, 8443, 27017]

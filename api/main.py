@@ -259,11 +259,11 @@ async def analyze_file(request: FileRequest):
 @app.get("/api/v1/wiki")
 def get_wiki_categories():
     return {"categories": [
-        {"id": "email_security", "name": "Email Security", "count": len(wiki_articles["email_security"])},
-        {"id": "threat_intelligence", "name": "Threat Intelligence", "count": len(wiki_articles["threat_intelligence"])},
-        {"id": "forensics", "name": "Forensics", "count": len(wiki_articles["forensics"])},
-        {"id": "detection_engineering", "name": "Detection Engineering", "count": len(wiki_articles["detection_engineering"])},
-        {"id": "attack_types", "name": "Attack Types", "count": len(wiki_articles["attack_types"])}
+        {"id": "email_security", "name": "Email Security", "count": len(wiki_articles["email_security"]), "articles": wiki_articles["email_security"]},
+        {"id": "threat_intelligence", "name": "Threat Intelligence", "count": len(wiki_articles["threat_intelligence"]), "articles": wiki_articles["threat_intelligence"]},
+        {"id": "forensics", "name": "Forensics", "count": len(wiki_articles["forensics"]), "articles": wiki_articles["forensics"]},
+        {"id": "detection_engineering", "name": "Detection Engineering", "count": len(wiki_articles["detection_engineering"]), "articles": wiki_articles["detection_engineering"]},
+        {"id": "attack_types", "name": "Attack Types", "count": len(wiki_articles["attack_types"]), "articles": wiki_articles["attack_types"]}
     ]}
 
 @app.get("/api/v1/wiki/{category}")

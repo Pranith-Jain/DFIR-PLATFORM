@@ -43,6 +43,8 @@ type TabType = "home" | "ioc" | "domain" | "phishing" | "exposure" | "file" | "p
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>("home");
   const [wikiCats, setWikiCats] = useState<WikiCategory[]>([]);
+  const [selectedWikiCat, setSelectedWikiCat] = useState<any | null>(null);
+  const [selectedWikiArticle, setSelectedWikiArticle] = useState<any | null>(null);
   const [intelArticles, setIntelArticles] = useState<any[]>([]);
   const [intelLoading, setIntelLoading] = useState(true);
   const [researchFeeds, setResearchFeeds] = useState<any[]>([]);
@@ -200,6 +202,37 @@ export default function Home() {
       });
       const data = await res.json();
       setFileResult(data);
+    } catch { setFileResult(null); }
+    setFileLoading(false);
+  };
+
+  const uploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setFileLoading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("http://localhost:8000/api/v1/file/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      setFileResult(data);
+      if (data.md5) setHashInput(data.md5);
+      
+      // If we got hashes, automatically run reputation analysis
+      if (data.sha256) {
+        const repRes = await fetch("http://localhost:8000/api/v1/file/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ hash_value: data.sha256 }),
+        });
+        const repData = await repRes.json();
+        setFileResult({ ...data, ...repData });
+      }
     } catch { setFileResult(null); }
     setFileLoading(false);
   };
@@ -490,6 +523,16 @@ export default function Home() {
     setPrivacyLoading(false);
   };
 
+  const exportData = (data: any, filename: string) => {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${filename}_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (!mounted) return null;
 
   const securityChecks = [
@@ -649,9 +692,20 @@ export default function Home() {
               <div className="space-y-6">
                 <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                   <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <p className="text-slate-500 text-sm">Health Score</p>
-                      <p className="text-4xl font-bold font-[Poppins]">{domainResult.score}/100</p>
+                    <div className="flex items-center gap-6">
+                      <div>
+                        <p className="text-slate-500 text-sm">Health Score</p>
+                        <p className="text-4xl font-bold font-[Poppins]">{domainResult.score}/100</p>
+                      </div>
+                      <button
+                        onClick={() => exportData(domainResult, `domain_${domainResult.domain}`)}
+                        className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Export
+                      </button>
                     </div>
                     <div className="text-right">
                       <p className="text-slate-500 text-sm">Grade</p>
@@ -829,10 +883,21 @@ export default function Home() {
               </div>
               {iocResult && (
                 <div className="mt-6 p-5 rounded-xl bg-slate-50 dark:bg-slate-800">
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="flex justify-between items-start mb-4">
                     <div>
                       <p className="text-slate-500 text-sm">Indicator</p>
-                      <p className="font-mono text-lg">{iocResult.indicator}</p>
+                      <div className="flex items-center gap-3">
+                        <p className="font-mono text-lg">{iocResult.indicator}</p>
+                        <button
+                          onClick={() => exportData(iocResult, `ioc_${iocResult.indicator}`)}
+                          className="px-2 py-1 rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-[10px] font-bold text-slate-500 flex items-center gap-1"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                          </svg>
+                          Export
+                        </button>
+                      </div>
                     </div>
                     <div className="text-right">
                       <p className="text-slate-500 text-sm">Type</p>
@@ -952,7 +1017,7 @@ export default function Home() {
           <div className="max-w-3xl mx-auto px-6">
             <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
               <h2 className="text-2xl font-bold mb-6 font-[Poppins]">File Hash Analyzer</h2>
-              <div className="flex gap-3">
+              <div className="flex gap-3 mb-6">
                 <input
                   type="text"
                   value={hashInput}
@@ -968,6 +1033,28 @@ export default function Home() {
                 >
                   {fileLoading ? "Analyzing..." : "Analyze"}
                 </button>
+              </div>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                  <div className="w-full border-t border-slate-200 dark:border-slate-800"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white dark:bg-slate-900 text-slate-500 uppercase">Or upload a file</span>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all">
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <svg className="w-8 h-8 mb-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <p className="mb-2 text-sm text-slate-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
+                    <p className="text-xs text-slate-400">Any file up to 10MB</p>
+                  </div>
+                  <input type="file" className="hidden" onChange={uploadFile} disabled={fileLoading} />
+                </label>
               </div>
               {fileResult && (
                 <div className="mt-6 space-y-4">
@@ -1165,37 +1252,101 @@ export default function Home() {
 
         {activeTab === "wiki" && (
           <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-12">
-              <h1 className="text-4xl font-bold mb-4 font-[Poppins]">Security Wiki</h1>
-              <p className="text-xl text-slate-600 dark:text-slate-400">
-                50+ articles on security concepts, threats, and best practices
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[
-                { id: "email_security", name: "Email Security", icon: "📧", color: "from-blue-500 to-cyan-500", articles: wikiCats.find(c => c.id === "email_security")?.count || 0 },
-                { id: "threat_intelligence", name: "Threat Intel", icon: "🎯", color: "from-red-500 to-orange-500", articles: wikiCats.find(c => c.id === "threat_intelligence")?.count || 0 },
-                { id: "forensics", name: "Forensics", icon: "🔍", color: "from-purple-500 to-fuchsia-500", articles: wikiCats.find(c => c.id === "forensics")?.count || 0 },
-                { id: "detection_engineering", name: "Detection", icon: "🛡️", color: "from-green-500 to-emerald-500", articles: wikiCats.find(c => c.id === "detection_engineering")?.count || 0 },
-                { id: "attack_types", name: "Attack Types", icon: "⚔️", color: "from-yellow-500 to-amber-500", articles: wikiCats.find(c => c.id === "attack_types")?.count || 0 },
-              ].map((cat) => (
-                <button
-                  key={cat.id}
-                  className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-500 transition-all text-left"
-                >
-                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${cat.color} flex items-center justify-center text-3xl shadow-lg`}>
-                    {cat.icon}
-                  </div>
-                  <h3 className="text-xl font-bold mb-2 font-[Poppins]">{cat.name}</h3>
-                  <p className="text-sm text-slate-500">
-                    {cat.articles} articles
+            {!selectedWikiCat ? (
+              <>
+                <div className="text-center mb-12">
+                  <h1 className="text-4xl font-bold mb-4 font-[Poppins]">Security Wiki</h1>
+                  <p className="text-xl text-slate-600 dark:text-slate-400">
+                    50+ articles on security concepts, threats, and best practices
                   </p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[
+                    { id: "email_security", name: "Email Security", icon: "📧", color: "from-blue-500 to-cyan-500", articlesCount: wikiCats.find(c => c.id === "email_security")?.count || 0 },
+                    { id: "threat_intelligence", name: "Threat Intel", icon: "🎯", color: "from-red-500 to-orange-500", articlesCount: wikiCats.find(c => c.id === "threat_intelligence")?.count || 0 },
+                    { id: "forensics", name: "Forensics", icon: "🔍", color: "from-purple-500 to-fuchsia-500", articlesCount: wikiCats.find(c => c.id === "forensics")?.count || 0 },
+                    { id: "detection_engineering", name: "Detection", icon: "🛡️", color: "from-green-500 to-emerald-500", articlesCount: wikiCats.find(c => c.id === "detection_engineering")?.count || 0 },
+                    { id: "attack_types", name: "Attack Types", icon: "⚔️", color: "from-yellow-500 to-amber-500", articlesCount: wikiCats.find(c => c.id === "attack_types")?.count || 0 },
+                  ].map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setSelectedWikiCat(wikiCats.find(c => c.id === cat.id))}
+                      className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-500 transition-all text-left"
+                    >
+                      <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${cat.color} flex items-center justify-center text-3xl shadow-lg mb-4`}>
+                        {cat.icon}
+                      </div>
+                      <h3 className="text-xl font-bold mb-2 font-[Poppins]">{cat.name}</h3>
+                      <p className="text-sm text-slate-500">
+                        {cat.articlesCount} articles
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : !selectedWikiArticle ? (
+              <div>
+                <button 
+                  onClick={() => setSelectedWikiCat(null)}
+                  className="mb-8 flex items-center gap-2 text-indigo-500 hover:text-indigo-600 transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Back to Categories
                 </button>
-              ))}
-            </div>
-</div>
-          )}
+                <div className="mb-12">
+                  <h1 className="text-3xl font-bold mb-2 font-[Poppins]">{selectedWikiCat.name}</h1>
+                  <p className="text-slate-500">{selectedWikiCat.count} articles in this category</p>
+                </div>
+                <div className="grid grid-cols-1 gap-4">
+                  {selectedWikiCat.articles?.map((article: any) => (
+                    <button
+                      key={article.slug}
+                      onClick={async () => {
+                        try {
+                          const res = await fetch(`http://localhost:8000/api/v1/wiki/article/${article.slug}`);
+                          const data = await res.json();
+                          setSelectedWikiArticle(data);
+                        } catch (e) {
+                          console.error("Failed to fetch article", e);
+                        }
+                      }}
+                      className="p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-500 transition-all text-left"
+                    >
+                      <h3 className="text-lg font-bold mb-2">{article.title}</h3>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">{article.description}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="max-w-4xl mx-auto">
+                <button 
+                  onClick={() => setSelectedWikiArticle(null)}
+                  className="mb-8 flex items-center gap-2 text-indigo-500 hover:text-indigo-600 transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Back to {selectedWikiCat.name}
+                </button>
+                <div className="p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <h1 className="text-3xl font-bold mb-4 font-[Poppins]">{selectedWikiArticle.title}</h1>
+                  <p className="text-lg text-slate-500 mb-8 pb-8 border-b border-slate-100 dark:border-slate-800 italic">
+                    {selectedWikiArticle.description}
+                  </p>
+                  <div className="prose dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 leading-relaxed space-y-4">
+                    {selectedWikiArticle.content.split('\n\n').map((para: string, i: number) => (
+                      <p key={i}>{para}</p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {activeTab === "intel" && (
           <div className="max-w-7xl mx-auto px-6">
@@ -1295,7 +1446,7 @@ export default function Home() {
                 <div className="col-span-full text-center py-12 text-slate-500">No actors found.</div>
               )}
             </div>
-
+          </div>
         )}
 
         {activeTab === "research" && (
