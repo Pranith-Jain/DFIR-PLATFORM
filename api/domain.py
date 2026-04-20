@@ -3,11 +3,13 @@ import aiohttp
 import socket
 import ssl
 import re
+import uuid
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 import whois
 import dns.resolver
 from urllib.parse import urlparse
+from providers import check_ioc_all_providers, calculate_score
 
 class DomainChecker:
     def __init__(self):
@@ -608,24 +610,93 @@ class ExposureScanner:
             self.enumerate_subdomains(domain),
             self.scan_common_ports(domain),
             self.check_cdn_detection(domain),
+            self.check_security_headers(domain),
             return_exceptions=True
         )
         
-        subdomains, ports, cdn_info = results
+        subdomains, ports, cdn_info, security_headers = results
         
         return {
             "domain": domain,
             "subdomains": subdomains,
             "open_ports": ports,
             "cdn": cdn_info,
+            "security_headers": security_headers,
             "attack_surface_score": self.calculate_attack_surface_score(ports, subdomains)
         }
     
+    async def check_security_headers(self, domain: str) -> Dict[str, Any]:
+        url = f"https://{domain}"
+        headers_to_check = [
+            "Strict-Transport-Security",
+            "Content-Security-Policy",
+            "X-Frame-Options",
+            "X-Content-Type-Options",
+            "Referrer-Policy",
+            "Permissions-Policy"
+        ]
+        
+        results = {}
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, timeout=10, allow_redirects=True) as response:
+                    for header in headers_to_check:
+                        results[header] = {
+                            "present": header in response.headers,
+                            "value": response.headers.get(header, "")
+                        }
+            return results
+        except Exception as e:
+            return {"error": str(e)}
+    
     async def enumerate_subdomains(self, domain: str) -> List[str]:
+        # Check for wildcard DNS first
+        is_wildcard = False
+        try:
+            wildcard_test = f"wildcard-test-{uuid.uuid4().hex[:8]}.{domain}"
+            self.resolver.resolve(wildcard_test, 'A')
+            is_wildcard = True
+        except:
+            pass
+
+        if is_wildcard:
+            return ["Wildcard DNS detected - exhaustive subdomain enumeration skipped"]
+
         common_subs = ['www', 'mail', 'ftp', 'localhost', 'webmail', 'smtp', 'pop', 'ns1', 'webdisk', 
                     'ns2', 'oaut', 'oauth', 'docs', 'm', 'blog', 'pop3', 'dev', 'www2', 'admin',
                     'forum', 'news', 'vpn', 'ns3', 'test', 'mx1', 'mx2', 'email', 'cvs', 'gitlab',
-                    'jenkins', 'prod', 'qa', 'stage', 'cdn', 'static', 'assets', 'backup', 'mail2']
+                    'jenkins', 'prod', 'qa', 'stage', 'cdn', 'static', 'assets', 'backup', 'mail2',
+                    'shop', 'api', 'app', 'status', 'help', 'support', 'billing', 'my', 'portal',
+                    'direct', 'cloud', 'secure', 'auth', 'login', 'internal', 'dev-api', 'staging',
+                    'demo', 'beta', 'git', 'svn', 'jira', 'confluence', 'wiki', 'monitoring',
+                    'grafana', 'prometheus', 'zabbix', 'nagios', 'cpanel', 'whm', 'plesk',
+                    'remote', 'connect', 'autodiscover', 'owa', 'exchange', 'sip', 'vpx',
+                    'firewall', 'gateway', 'proxy', 'lb', 'loadbalancer', 'nas', 'storage',
+                    'db', 'database', 'sql', 'mysql', 'postgre', 'mongodb', 'redis',
+                    'es', 'elastic', 'search', 'jenkins', 'ci', 'cd', 'deploy', 'k8s', 'kube',
+                    'docker', 'registry', 'ansible', 'puppet', 'chef', 'splunk', 'elk', 'logs',
+                    'mta-sts', 'autodiscover', 'lyncdiscover', 'sip', 'vpn', 'gw', 'webhop',
+                    'mobile', 'm', 'msg', 'secure', 'web', 'mailhost', 'mailserver', 'relay',
+                    'mta', 'mx', 'smtp', 'pop3', 'imap', 'webmail', 'exchange', 'outlook',
+                    'owa', 'autodiscover', 'lyncdiscover', 'sip', 'vpn', 'gw', 'webhop',
+                    'mobile', 'm', 'msg', 'secure', 'web', 'mailhost', 'mailserver', 'relay',
+                    'mta', 'mx', 'smtp', 'pop3', 'imap', 'webmail', 'exchange', 'outlook',
+                    'owa', 'ns', 'ns1', 'ns2', 'ns3', 'ns4', 'ns5', 'dns', 'dns1', 'dns2',
+                    'dns3', 'dev', 'test', 'stage', 'staging', 'prod', 'production', 'lab',
+                    'internal', 'intranet', 'local', 'corp', 'office', 'guest', 'wifi',
+                    'api', 'v1', 'v2', 'v3', 'endpoint', 'ws', 'graphql', 'auth', 'login',
+                    'sso', 'portal', 'account', 'profile', 'admin', 'administrator', 'root',
+                    'manage', 'console', 'dashboard', 'panel', 'cpanel', 'whm', 'plesk',
+                    'directadmin', 'webmin', 'ssh', 'ftp', 'sftp', 'rsync', 'svn', 'git',
+                    'gitlab', 'github', 'bitbucket', 'jira', 'confluence', 'wiki', 'docs',
+                    'help', 'support', 'billing', 'shop', 'store', 'e-commerce', 'cart',
+                    'checkout', 'cdn', 'static', 'assets', 'img', 'images', 'js', 'css',
+                    'media', 'upload', 'download', 'files', 'storage', 'backups', 'backup',
+                    'db', 'database', 'sql', 'mysql', 'postgresql', 'redis', 'mongodb',
+                    'elastic', 'elasticsearch', 'search', 'solr', 'kibana', 'grafana',
+                    'prometheus', 'zabbix', 'nagios', 'monitoring', 'status', 'logs',
+                    'elk', 'splunk', 'graylog', 'jenkins', 'ci', 'cd', 'travis', 'circleci',
+                    'docker', 'kubernetes', 'k8s', 'registry', 'ansible', 'puppet', 'chef']
         
         found = []
         
@@ -637,19 +708,25 @@ class ExposureScanner:
             except:
                 return None
         
-        results = await asyncio.gather(*[check_sub(s) for s in common_subs])
-        found = [r for r in results if r]
+        # Split into batches to avoid overwhelming the resolver
+        chunk_size = 20
+        for i in range(0, len(common_subs), chunk_size):
+            chunk = common_subs[i:i + chunk_size]
+            results = await asyncio.gather(*[check_sub(s) for s in chunk])
+            found.extend([r for r in results if r])
         
-        return found
+        return sorted(list(set(found)))
     
     async def scan_common_ports(self, domain: str) -> Dict[str, Any]:
-        ports = [21, 22, 23, 25, 53, 80, 110, 143, 443, 445, 465, 587, 993, 995, 3306, 3389, 5432, 8080, 8443, 27017]
+        ports = [21, 22, 23, 25, 53, 80, 110, 143, 443, 445, 465, 587, 993, 995, 1433, 1521, 3306, 3389, 5432, 5900, 6379, 8000, 8080, 8443, 9000, 9200, 27017]
         port_names = {
             21: "FTP", 22: "SSH", 23: "Telnet", 25: "SMTP", 53: "DNS",
             80: "HTTP", 110: "POP3", 143: "IMAP", 443: "HTTPS", 445: "SMB",
             465: "SMTPS", 587: "Submission", 993: "IMAPS", 995: "POP3S",
-            3306: "MySQL", 3389: "RDP", 5432: "PostgreSQL",
-            8080: "HTTP-Alt", 8443: "HTTPS-Alt", 27017: "MongoDB"
+            1433: "MSSQL", 1521: "Oracle", 3306: "MySQL", 3389: "RDP", 
+            5432: "PostgreSQL", 5900: "VNC", 6379: "Redis",
+            8000: "HTTP-Alt", 8080: "HTTP-Alt", 8443: "HTTPS-Alt", 
+            9000: "FastCGI", 9200: "Elasticsearch", 27017: "MongoDB"
         }
         
         open_ports = []
@@ -728,15 +805,23 @@ class FileAnalyzer:
         else:
             return {"error": "Invalid hash length"}
         
+        sources = await check_ioc_all_providers(hash_value, hash_type)
+        score, verdict, tags = calculate_score(sources)
+        
+        vt_data = next((s for s in sources if s.get("provider") == "VirusTotal"), {})
+        otx_data = next((s for s in sources if s.get("provider") == "OTX"), {})
+        
         return {
             "hash": hash_value,
             "type": hash_type,
-            "verdict": "unknown",
-            "detection_ratio": 0,
-            "total_engines": 0,
-            "tags": [],
-            "first_seen": None,
-            "sources": []
+            "score": score,
+            "verdict": verdict,
+            "detection_ratio": vt_data.get("malicious", 0) if vt_data else otx_data.get("detection_ratio", 0),
+            "total_engines": vt_data.get("total", 0) if vt_data else 0,
+            "tags": tags,
+            "meaningful_name": vt_data.get("meaningful_name", ""),
+            "first_seen": vt_data.get("first_submitted") or otx_data.get("first_seen"),
+            "sources": sources
         }
     
     async def analyze_file_upload(self, file_data: bytes, filename: str) -> Dict[str, Any]:
@@ -747,9 +832,20 @@ class FileAnalyzer:
         sha256 = hashlib.sha256(file_data).hexdigest()
         
         import magic
-        mime = magic.from_buffer(file_data[:1024], mime=True)
+        try:
+            mime = magic.from_buffer(file_data[:2048], mime=True)
+        except:
+            mime = "application/octet-stream"
         
-        suspicious_extensions = ['.exe', '.scr', '.bat', '.vbs', '.js', '.jar', '.com', '.pif', '.msi', '.hta']
+        reputation = await self.analyze_hash(sha256)
+        
+        suspicious_extensions = [".exe", ".scr", ".bat", ".vbs", ".js", ".jar", ".com", ".pif", ".msi", ".hta", ".iso", ".img"]
+        
+        is_suspicious_ext = any(filename.lower().endswith(ext) for ext in suspicious_extensions)
+        
+        final_verdict = reputation.get("verdict", "unknown")
+        if final_verdict == "clean" and is_suspicious_ext:
+            final_verdict = "suspicious"
         
         return {
             "filename": filename,
@@ -758,7 +854,8 @@ class FileAnalyzer:
             "md5": md5,
             "sha1": sha1,
             "sha256": sha256,
-            "suspicious_extension": any(filename.endswith(ext) for ext in suspicious_extensions),
-            "verdict": "requires-upload",
-            "recommendation": "Upload to sandbox for analysis"
+            "suspicious_extension": is_suspicious_ext,
+            "reputation": reputation,
+            "verdict": final_verdict,
+            "recommendation": "Malicious file detected" if final_verdict == "malicious" else "Suspicious file detected" if final_verdict == "suspicious" else "No immediate threats found in intelligence databases"
         }
