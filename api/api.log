@@ -1,0 +1,42 @@
+INFO:     Started server process [33601]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:62468 - "POST /api/v1/domain/check HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62507 - "GET /api/v1/wiki HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62520 - "POST /api/v1/domain/check HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62534 - "POST /api/v1/domain/check HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62536 - "POST /api/v1/domain/check HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62533 - "GET /api/v1/wiki HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62564 - "POST /api/v1/domain/check HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62668 - "GET /api/v1/wiki HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62767 - "GET /api/v1/wiki HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62775 - "GET /api/v1/wiki HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62783 - "GET /api/v1/wiki HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62792 - "GET /api/v1/wiki HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62807 - "GET /api/v1/wiki HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62827 - "POST /api/v1/domain/check HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62836 - "POST /api/v1/ioc/check HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62840 - "POST /api/v1/exposure/scan HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62926 - "GET /api/v1/wiki HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62926 - "GET /api/v1/wiki HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62953 - "GET /api/v1/wiki HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63032 - "GET /api/v1/wiki HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63072 - "GET /api/v1/wiki HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63093 - "GET /api/v1/wiki HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63130 - "GET /api/v1/wiki HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63189 - "GET /api/v1/wiki HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63372 - "GET /api/v1/wiki HTTP/1.1" 200 OK
+INFO:     49.37.249.99:0 - "GET / HTTP/1.1" 200 OK
+INFO:     49.37.249.99:0 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:63515 - "GET /api/v1/intel/feed HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:63516 - "GET /api/v1/wiki HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63520 - "GET /api/v1/intel/feed HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:63522 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63536 - "GET /api/v1/intel/feed HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:63535 - "GET /api/v1/wiki HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63538 - "GET /api/v1/intel/feed HTTP/1.1" 404 Not Found
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [33601]
