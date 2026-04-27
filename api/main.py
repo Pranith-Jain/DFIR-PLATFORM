@@ -427,11 +427,29 @@ def get_wiki_article(slug: str):
 
 @app.get("/api/v1/intel/feed")
 async def get_intel_feed():
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get("https://dfir-lab.ch/feed.xml")
-            return {"xml": response.text}
-    except Exception as e: return {"error": str(e)}
+    feeds = [
+        {"name": "DFIR Lab", "url": "https://dfir-lab.ch/feed.xml"},
+        {"name": "DFIR Radar", "url": "https://falhumaid.github.io/DFIR_Radar_RSS/rss.xml"}
+    ]
+    results = []
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        for feed in feeds:
+            try:
+                response = await client.get(feed["url"])
+                root = ElementTree.fromstring(response.text)
+                items = []
+                for item in root.findall(".//item")[:10]:
+                    title = item.find("title"); link = item.find("link"); pubDate = item.find("pubDate"); desc = item.find("description")
+                    items.append({
+                        "title": title.text if title is not None else "",
+                        "link": link.text if link is not None else "",
+                        "pubDate": pubDate.text if pubDate is not None else "",
+                        "desc": desc.text[:200] + "..." if desc is not None and len(desc.text or "") > 200 else desc.text if desc is not None else ""
+                    })
+                results.append({"name": feed["name"], "items": items})
+            except Exception as e:
+                results.append({"name": feed["name"], "items": [], "error": str(e)})
+    return {"feeds": results}
 
 @app.get("/api/v1/research/feeds")
 async def get_research_feeds():
@@ -441,6 +459,8 @@ async def get_research_feeds():
         {"name": "Dark Reading", "url": "https://www.darkreading.com/rss.xml"},
         {"name": "SecurityWeek", "url": "https://www.securityweek.com/feed/"},
         {"name": "CISA Alerts", "url": "https://www.cisa.gov/uscert/ncas/alerts.xml"},
+        {"name": "DFIR Lab", "url": "https://dfir-lab.ch/feed.xml"},
+        {"name": "DFIR Radar", "url": "https://falhumaid.github.io/DFIR_Radar_RSS/rss.xml"}
     ]
     results = []
     async with httpx.AsyncClient(timeout=10.0) as client:
