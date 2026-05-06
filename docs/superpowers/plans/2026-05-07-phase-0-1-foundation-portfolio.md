@@ -743,13 +743,15 @@ cd /Users/pranith/Documents/portfolio && npm test -- --run DfirRoutes
 
 Expected: 7 tests fail, message like "Unable to find role 'heading' with name 'IOC Checker'" — the routes don't exist yet, react-router falls through.
 
-- [ ] **Step 5: Create the shared `ComingSoon` component**
+- [ ] **Step 5: Create the shared `ComingSoon` component (dfir-lab.ch aesthetic)**
 
 Path: `/Users/pranith/Documents/portfolio/src/pages/dfir/ComingSoon.tsx`
 
+This component is the first piece of UI in the new dfir-lab-inspired design language (spec §12). Dark background, cyan accent using existing `neon.cyan` token, monospace for the indicator-style label, generous whitespace.
+
 ```tsx
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Sparkles } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 interface Props {
   title: string;
@@ -758,36 +760,40 @@ interface Props {
 
 export function ComingSoon({ title, description }: Props): JSX.Element {
   return (
-    <section className="max-w-3xl mx-auto px-6 py-16">
-      <Link
-        to="/dfir"
-        className="inline-flex items-center gap-2 text-sm text-brand-600 hover:text-brand-700 mb-8"
-      >
-        <ArrowLeft size={16} />
-        Back to DFIR
-      </Link>
+    <div className="min-h-screen bg-[#0a0a0a] text-[#fafafa]">
+      <section className="max-w-3xl mx-auto px-8 py-20">
+        <Link
+          to="/dfir"
+          className="inline-flex items-center gap-2 text-sm text-[#a1a1aa] hover:text-[#00fff9] transition-colors mb-12 font-mono"
+        >
+          <ArrowLeft size={14} />
+          /dfir
+        </Link>
 
-      <div className="flex items-center gap-3 mb-4">
-        <Sparkles size={28} className="text-brand-600" aria-hidden="true" />
-        <span className="text-xs uppercase tracking-wider text-brand-600">Coming soon</span>
-      </div>
+        <span className="inline-block text-xs uppercase tracking-[0.2em] text-[#00fff9] font-mono mb-4">
+          Coming soon
+        </span>
 
-      <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-4">
-        {title}
-      </h1>
+        <h1 className="text-4xl sm:text-5xl font-display font-bold mb-6 leading-tight">
+          {title}
+        </h1>
 
-      <p className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed">
-        {description}
-      </p>
+        <p className="text-lg text-[#a1a1aa] leading-relaxed max-w-2xl">
+          {description}
+        </p>
 
-      <p className="mt-8 text-sm text-slate-500 dark:text-slate-400">
-        This tool is part of the DFIR toolkit integration. Live functionality lands
-        in Phase 2 of the rollout.
-      </p>
-    </section>
+        <div className="mt-12 pt-8 border-t border-[#1f1f23]">
+          <p className="text-sm text-[#71717a] font-mono">
+            Status: <span className="text-[#00fff9]">scheduled · phase 2</span>
+          </p>
+        </div>
+      </section>
+    </div>
   );
 }
 ```
+
+> The hard-coded hex colors (`#0a0a0a`, `#00fff9`, etc.) are placeholders that will be promoted to a `dfir.*` Tailwind theme namespace in Phase 2. Inline hex is fine for this single placeholder component to avoid touching `tailwind.config.js` until we have a UI to validate it against.
 
 - [ ] **Step 6: Create the seven route components**
 
@@ -1017,18 +1023,24 @@ sed -n '1,80p' /Users/pranith/Documents/portfolio/src/pages/DFIR.tsx
 
 Identify the location near the top of the rendered tree, after `<Breadcrumbs ... />`, where a "Tools" section can be inserted without disturbing the existing tab interface.
 
-- [ ] **Step 2: Insert a `ToolGrid` element**
+- [ ] **Step 2: Insert a `ToolGrid` element (dfir-lab.ch aesthetic, scoped)**
 
-In `src/pages/DFIR.tsx`, after the imports, add:
+The existing `DFIR.tsx` lives within the portfolio's existing visual language. The new `ToolGrid` introduces the new dfir-lab-style cards as a single bridging block — dark cards on the existing page background. Phase 2 will fully migrate `/dfir` to the dark shell from spec §12.3; for now, isolated styling keeps regressions contained.
+
+In `src/pages/DFIR.tsx`, near the existing imports add (if not already present):
 
 ```tsx
 import { Link } from 'react-router-dom';
+```
 
+Then add this near the top of the file, after the existing imports:
+
+```tsx
 const dfirTools = [
-  { path: '/dfir/ioc-check', label: 'IOC Checker', desc: 'IPs, domains, URLs, hashes', icon: Hash },
+  { path: '/dfir/ioc-check', label: 'IOC Checker', desc: 'IPs · domains · URLs · hashes', icon: Hash },
   { path: '/dfir/phishing', label: 'Phishing Analyzer', desc: 'Email headers + content', icon: ShieldAlert },
-  { path: '/dfir/domain', label: 'Domain Lookup', desc: 'WHOIS, DNS, SSL', icon: Globe },
-  { path: '/dfir/exposure', label: 'Exposure Scanner', desc: 'Subdomains + ports', icon: Radar },
+  { path: '/dfir/domain', label: 'Domain Lookup', desc: 'WHOIS · DNS · SSL', icon: Globe },
+  { path: '/dfir/exposure', label: 'Exposure Scanner', desc: 'Subdomains + open ports', icon: Radar },
   { path: '/dfir/file', label: 'File Analyzer', desc: 'Hash-based lookups', icon: FileSearch },
   { path: '/dfir/wiki', label: 'Knowledge Base', desc: 'Concepts + playbooks', icon: FileText },
   { path: '/dfir/dashboard', label: 'Recent Lookups', desc: 'Your last 20 queries', icon: Clock },
@@ -1036,28 +1048,37 @@ const dfirTools = [
 
 function ToolGrid(): JSX.Element {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 my-8">
-      {dfirTools.map(({ path, label, desc, icon: Icon }) => (
-        <Link
-          key={path}
-          to={path}
-          className="block rounded-lg border border-slate-200 dark:border-slate-700 p-4 hover:border-brand-500 transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <Icon size={20} className="text-brand-600" aria-hidden="true" />
-            <span className="font-semibold text-slate-900 dark:text-slate-100">{label}</span>
-          </div>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{desc}</p>
-        </Link>
-      ))}
-    </div>
+    <section className="my-10 rounded-2xl bg-[#0a0a0a] p-6 sm:p-8 border border-[#1f1f23]">
+      <header className="flex items-baseline justify-between mb-6">
+        <h2 className="text-xl font-display font-bold text-[#fafafa]">DFIR Tools</h2>
+        <span className="text-xs font-mono text-[#a1a1aa]">7 tools · live in phase 2</span>
+      </header>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {dfirTools.map(({ path, label, desc, icon: Icon }) => (
+          <Link
+            key={path}
+            to={path}
+            className="group block rounded-lg border border-[#1f1f23] bg-[#111113] p-4 hover:border-[#00fff9]/40 hover:bg-[#161618] transition-colors"
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <Icon size={18} className="text-[#00fff9]" aria-hidden="true" />
+              <span className="font-semibold text-[#fafafa] group-hover:text-[#00fff9] transition-colors">
+                {label}
+              </span>
+            </div>
+            <p className="text-sm font-mono text-[#a1a1aa] leading-relaxed">{desc}</p>
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }
 ```
 
-All icons used (`Hash`, `ShieldAlert`, `Globe`, `Radar`, `FileSearch`, `FileText`, `Clock`) are already imported in DFIR.tsx — verify this in the existing import block. If any are missing, add them to the existing `lucide-react` import.
+All icons used (`Hash`, `ShieldAlert`, `Globe`, `Radar`, `FileSearch`, `FileText`, `Clock`) are already imported in `DFIR.tsx` — verify this in the existing import block. If any are missing, add them to the existing `lucide-react` import.
 
-Render `<ToolGrid />` once near the top of the JSX returned by `DFIR`, just below `<Breadcrumbs />`.
+Render `<ToolGrid />` once near the top of the JSX returned by `DFIR`, just below `<Breadcrumbs />`. The hard-coded hex values match spec §12.1 and will be promoted to Tailwind tokens in Phase 2.
 
 - [ ] **Step 3: Run tests**
 

@@ -3,7 +3,7 @@
 **Date:** 2026-05-07
 **Owner:** Pranith Jain
 **Status:** Draft for review
-**Revision:** 2 — corrected stack from Next.js to Vite/React after inspecting `Pranith-Jain.github.io`
+**Revision:** 3 — added free-tier constraints (no paid Cloudflare features) + design language reference (dfir-lab.ch-inspired aesthetic for `/dfir/*`)
 
 ## 1. Goal
 
@@ -176,9 +176,9 @@ The route handler returns a `ReadableStream` with `Content-Type: text/event-stre
 
 ### 4.6 Anti-abuse
 
-- Cloudflare rate-limit binding: 30 req/min/IP on `/api/v1/*`
-- Per-provider circuit breaker: two consecutive 401/403 responses within 5 min mark the provider unhealthy in KV for 15 min; further requests short-circuit
-- Input hardening: payloads >10kB rejected, email bodies truncated to 64kB, file uploads capped at 10MB
+- **Per-IP rate limit (KV-based, no binding):** key `rl:<sha1(ip)>:<minute_bucket>` → counter. On each request, `INCR`-equivalent (read+write). Reject if > 30/min. Ten KV ops/request is cheap; counters expire via TTL=120s. Avoids the rate-limit binding (paid).
+- **Per-provider circuit breaker:** two consecutive 401/403 responses within 5 min mark the provider unhealthy in KV for 15 min; further requests short-circuit
+- **Input hardening:** payloads >10kB rejected, email bodies truncated to 64kB, file uploads capped at 10MB
 
 ### 4.7 Workers caveats (deliberately accepted)
 
@@ -200,7 +200,7 @@ The route handler returns a `ReadableStream` with `Content-Type: text/event-stre
 - "Share" button on any result page → POST `/api/v1/share` with the result snapshot → returns short id (e.g. `r/Xk2P9q`)
 - KV stores the snapshot, TTL 90 days
 - Read-only page, no recompute, "Re-run live" CTA links back to the tool with prefilled input
-- Open Graph image generated via [Satori](https://github.com/vercel/satori) + `@cloudflare/workers-types` in a Workers route (`/api/v1/share/:id/og.png`) so links unfurl on Twitter/LinkedIn
+- Open Graph: a single **static OG image** stored in `public/og-dfir-share.png` (built once, served by SPA Worker). Share links unfurl with this generic image plus the dynamic title/description. Dynamic Satori-generated images are deferred until/unless the account upgrades from free.
 
 ### 5.3 Dark/light theme
 
@@ -214,12 +214,13 @@ The route handler returns a `ReadableStream` with `Content-Type: text/event-stre
 - Result UI renders ATT&CK chips with links to mitre.org technique pages
 - Map-based only — no inference beyond what the map covers, to avoid false attribution
 
-### 5.5 PDF export
+### 5.5 PDF export (free-tier-safe)
 
-- "Export PDF" button on result and share pages → `/api/v1/export/pdf?share_id=…`
-- Implementation: `@react-pdf/renderer` server-side in the Worker (no external service, no extra cost)
-- PDF contents: header, indicator, composite verdict, per-provider rows, MITRE chips, timestamp
-- Pixel-perfect Cloudflare Browser Rendering integration is **out of scope** (paid feature; revisit later)
+- "Export PDF" button on result and share pages → opens `/dfir/r/:id?print=1` in a new tab
+- That route renders a **print-optimized HTML view** (`@media print` CSS, no nav/footer, monospace indicators, full provider table)
+- The print page auto-triggers `window.print()` on load; the user's browser produces the PDF
+- **Zero server CPU cost.** Identical end-result quality with no Worker compute.
+- Server-side `@react-pdf/renderer` and Cloudflare Browser Rendering are both **out of scope** (CPU and/or paid)
 
 ## 6. Improvements
 
@@ -241,6 +242,7 @@ Listed explicitly to keep scope tight:
 - CLI tool (`dfir-cli`)
 - Self-hosted variant
 - Cloudflare Browser Rendering integration for PDFs
+- **Anything that requires a paid Cloudflare plan** (Workers Paid, Browser Rendering, paid rate-limit, advanced bot management). MVP must work entirely on the free tier.
 
 ## 8. Migration phases
 
@@ -273,3 +275,73 @@ Listed explicitly to keep scope tight:
 - p95 tool response time < 3s with cache warm
 - Zero secrets in git history (verified by pre-commit secret scan)
 - Old standalone `dfir` repo archived; FastAPI reference code deleted from unified repo after phase 2 ships
+- Entire MVP runs on the **Cloudflare free tier** with daily KV writes < 1k and Worker requests < 100k
+
+## 11. Free-tier budget
+
+| Resource | Free quota | MVP usage estimate | Headroom |
+|---|---|---|---|
+| Worker requests | 100k/day | ~500/day at small audience | 200× |
+| Worker CPU | 10ms/invocation | ~3–8ms typical (provider fan-out is I/O, not CPU) | tight, monitor |
+| Worker subrequests | 50/invocation | 8 (one per provider in IOC fan-out) | 6× |
+| KV reads | 100k/day | ~3 per request (cache lookup + recent + share) ≈ 1.5k/day | 60× |
+| KV writes | 1k/day | ~1 per cache miss; mostly hits expected ≈ 100/day | 10× |
+| KV storage | 1GB | <50MB cached responses + history | 20× |
+| R2 storage | 10GB | <100MB hashed file uploads | 100× |
+| R2 Class A ops | 1M/month | minimal — uploads only | 1000× |
+| Custom domains | unlimited | 1 (`pranithjain.qzz.io`) | n/a |
+
+**Hot constraints to monitor:**
+
+1. **Worker CPU time:** the only feature at risk is PDF/OG generation — already swapped for client-side print + static OG (§5.2, §5.5).
+2. **KV writes:** if traffic spikes, cache write storms could exhaust 1k/day. Mitigation: stale-while-revalidate already debounces refresh writes; add probabilistic 10% sampling for SWR if needed.
+3. **Subrequests per invocation:** 50 is plenty for 8 providers. Stay below 20 to leave room for cache + recent-history reads in the same invocation.
+
+If any of these regularly hit ceilings, the user can upgrade to Workers Paid ($5/mo) for 50ms CPU and 1000 subrequests — design supports this with no code changes.
+
+## 12. Design language for `/dfir/*` (dfir-lab.ch-inspired)
+
+Applies only to routes under `/dfir/*`. Portfolio routes (`/`, `/about`, `/skills`, `/experience`, `/projects`) keep their existing visual identity. The transition between aesthetics is intentional — `/dfir` is a "tool surface" that should feel distinct from the personal-brand portfolio.
+
+### 12.1 Palette
+
+| Token | Value | Usage |
+|---|---|---|
+| `dfir-bg` | `#0a0a0a` (near-black) | page background |
+| `dfir-surface` | `#111113` | cards, code blocks, elevated surfaces |
+| `dfir-border` | `#1f1f23` | hairline borders, dividers |
+| `dfir-text` | `#fafafa` | primary text |
+| `dfir-text-dim` | `#a1a1aa` | secondary text, metadata |
+| `dfir-accent` | reuse `neon.cyan: #00fff9` from existing `tailwind.config.js` | links, focus rings, key highlights |
+| `dfir-accent-hover` | `#22d3ee` | hover state |
+| `dfir-warn` | `#f59e0b` | suspicious verdict |
+| `dfir-danger` | `#ef4444` | malicious verdict |
+| `dfir-ok` | `#10b981` | clean verdict |
+
+Add these as Tailwind theme extensions in `tailwind.config.js` under a new `dfir.*` namespace so the existing `brand.*` palette stays untouched.
+
+### 12.2 Typography
+
+- Headings: existing `Poppins` (already in `fontFamily.display`), weights 600–700
+- Body: existing `Inter` (already in `fontFamily.sans`)
+- Monospace: existing `Space Grotesk` (already in `fontFamily.mono`) — use for IOCs, hashes, IPs, code blocks, endpoint URLs
+- Scale: H1 38–44px, H2 28–32px, H3 20–22px, body 15–16px, mono 14–15px
+
+### 12.3 Layout primitives
+
+- **DFIR layout shell** (`src/components/dfir/DfirLayout.tsx`): dark background, sticky compact top nav (logo / Tools dropdown / Wiki link / theme toggle), content max-width 1200px, generous 32px section padding.
+- **ToolPage shell**: breadcrumbs → page title → 1-line subtitle → form-card → result rows. Keep input form above the fold.
+- **Wiki grid**: category filter pills along the top (`All | Email Security | Threat Intel | Forensics | Detection | Attack Types`), then a responsive 1/2/3-column grid of concept cards. Each card: title (Poppins 600), 1–2-line definition (Inter), small metadata (category tag), entire card is the link.
+- **Result row** (per-provider in IOC checker): provider logo or initials, score chip, verdict chip (color from §12.1), tags row, "details" disclosure expanding to raw summary.
+- **Code/snippet block**: `bg-dfir-surface`, `border-dfir-border`, `text-dfir-text`, mono font, optional cyan inline-highlight for the active line.
+- **Metric callout** (homepage / tool landing): bold cyan number + dim label, e.g. `312ms · 11 sources`.
+
+### 12.4 Don'ts
+
+- No gradient blobs, no framer-motion-heavy animations on `/dfir/*` (existing portfolio keeps them; the DFIR sub-app feels calmer)
+- No emoji decoration; lucide-react icons only
+- No light-mode-first styling on `/dfir/*` — the section is dark-only by design (theme toggle still works, but DFIR forces its own scheme regardless)
+
+### 12.5 Reference
+
+`https://dfir-lab.ch/` (homepage) and `https://dfir-lab.ch/wiki/` (knowledge base) — match the spirit of these pages, not the literal layout. Don't copy assets, copy patterns.
