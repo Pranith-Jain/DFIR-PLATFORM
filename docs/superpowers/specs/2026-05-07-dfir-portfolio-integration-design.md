@@ -3,25 +3,31 @@
 **Date:** 2026-05-07
 **Owner:** Pranith Jain
 **Status:** Draft for review
+**Revision:** 2 — corrected stack from Next.js to Vite/React after inspecting `Pranith-Jain.github.io`
 
 ## 1. Goal
 
-Merge the DFIR Platform (currently `dfir/` with Next.js frontend + FastAPI backend) and the personal portfolio (currently `Pranith-Jain.github.io`, Next.js on Cloudflare Workers) into a single Next.js application served from `pranithjain.qzz.io`.
+Merge the DFIR Platform (currently `dfir/` with Next.js scaffold + FastAPI backend) into the personal portfolio (currently `Pranith-Jain.github.io`, **Vite + React 18 SPA** on Cloudflare Workers) so the unified site is served from `pranithjain.qzz.io`.
 
 The toolkit lives at `/dfir` and all 5 tools (IOC checker, phishing analyzer, domain lookup, exposure scanner, file analyzer) work live against real threat-intel APIs. New functionality (dashboard, shareable results, theme, MITRE ATT&CK tagging, PDF export) and infrastructure improvements (SSE streaming, KV caching) are added on top of the original plan.
+
+**Reuse policy:** the portfolio is the mature codebase (~30 components, tests, eslint, prettier, design system, sitemap, structured data, existing `DFIR.tsx`/`DFIRNavigation.tsx`/`useDFIRSettings.ts`). It is the **base**. The empty Next.js scaffold in the `dfir/` repo is **discarded**; only its planning docs (`DFIR-PLATFORM-PLAN.md`, `wiki_data.py` content, FastAPI code as porting reference) are carried over.
 
 ## 2. Architecture
 
 ### 2.1 Topology
 
-One repo, one Cloudflare Worker. The existing `dfir/web` Next.js 16 app becomes the unified portfolio + DFIR site.
+One repo, **two** Cloudflare Workers under one domain.
 
-- **Repo strategy:** the existing `dfir` repo is renamed and adopted as the new portfolio repo. Portfolio content from `Pranith-Jain.github.io` is migrated into `app/(portfolio)/...`. The old portfolio repo is archived after cutover.
-- **Build adapter:** `@opennextjs/cloudflare` — official Next.js 16 App Router path on Cloudflare Workers.
-- **Domain:** `pranithjain.qzz.io` resolves to the new Worker. DNS unchanged.
-- **The existing `api/` Python (FastAPI) directory is deleted** after logic is ported to TypeScript route handlers. No dual stack.
+- **Repo strategy:** the existing `Pranith-Jain.github.io` repo is the unified base. The DFIR planning docs and reference Python code from the `dfir` repo are pulled in (under `docs/dfir-legacy/`). The empty `dfir/web` Next.js scaffold is discarded. The standalone `dfir` repo is archived after cutover.
+- **Frontend stack (existing):** Vite 6 + React 18 + react-router-dom v6 + Tailwind v3 + framer-motion + vitest. SPA bundles to `./dist`.
+- **SPA Worker:** existing static-asset Worker (`wrangler.json` with `assets.directory: ./dist`) keeps serving the SPA at all non-API paths.
+- **API Worker (new):** a separate Cloudflare Worker at `api/` in the same repo, deployed independently, bound to the route `pranithjain.qzz.io/api/v1/*`. This is where every threat-intel call, KV cache, share/recent storage, and PDF generation lives.
+- **Why two Workers, not one:** Cloudflare's static-asset Workers can't currently host long-lived API logic alongside SPA assets cleanly. Splitting keeps the SPA build fast (Vite, no SSR) and lets the API Worker iterate on its own deploy cadence.
+- **Domain:** `pranithjain.qzz.io` unchanged. Routes binding sends `/api/v1/*` to the API Worker, everything else to the SPA Worker.
+- **The original FastAPI `api/` Python code is kept as porting reference under `docs/dfir-legacy/api-reference/`** until phase 2 ships, then deleted.
 
-### 2.2 Cloudflare bindings (`wrangler.toml`)
+### 2.2 Cloudflare bindings (API Worker `api/wrangler.toml`)
 
 | Binding | Type | Purpose | Notes |
 |---|---|---|---|
@@ -30,38 +36,41 @@ One repo, one Cloudflare Worker. The existing `dfir/web` Next.js 16 app becomes 
 | `R2_FILES` | R2 bucket | File analyzer uploads | 10MB limit, hash-only mode default |
 | `RL_API` | Rate limit | `/api/v1/*` abuse protection | 30 req/min/IP |
 
+The SPA Worker (existing `wrangler.json` at repo root) keeps no bindings — pure static assets. All bindings live on the API Worker only.
+
 ### 2.3 Secrets (`wrangler secret put`)
 
 `VT_API_KEY`, `ABUSEIPDB_API_KEY`, `SHODAN_API_KEY`, `GREYNOISE_API_KEY`, `OTX_API_KEY`, `URLSCAN_API_KEY`, `HYBRID_ANALYSIS_API_KEY`, `PULSEDIVE_API_KEY`. Never committed.
 
 ## 3. Routes & sitemap
 
-### 3.1 Portfolio routes (`app/(portfolio)/...`)
+### 3.1 Portfolio routes (existing react-router-dom v6 in `src/App.tsx`)
 
 ```
-/                       portfolio home (migrated from Pranith-Jain.github.io)
-/about                  about page
-/projects               projects index
-/projects/[slug]        project case-study (one of these is the DFIR write-up)
-/contact                contact page
+/                       portfolio home (existing src/pages/Home.tsx)
+/about                  src/pages/About.tsx
+/skills                 src/pages/Skills.tsx
+/experience             src/pages/Experience.tsx
+/projects               src/pages/Projects.tsx
+/dfir                   src/pages/DFIR.tsx (existing — kept and extended)
 ```
 
-### 3.2 DFIR routes (`app/dfir/...`)
+### 3.2 DFIR sub-routes (new react-router children of `/dfir`)
 
 ```
-/dfir                   landing — tool grid + recent activity + intro
+/dfir                   landing — tool grid + recent activity + intro (extends existing DFIR.tsx)
 /dfir/ioc-check         IOC checker UI
 /dfir/phishing          phishing email analyzer UI
 /dfir/domain            domain lookup UI
 /dfir/exposure          exposure scanner UI
 /dfir/file              file analyzer UI
 /dfir/wiki              knowledge base index (5 categories)
-/dfir/wiki/[slug]       wiki article (statically generated for SEO)
+/dfir/wiki/:slug        wiki article (pre-rendered to static HTML for SEO via vite-plugin-prerender or equivalent)
 /dfir/dashboard         recent lookups (anonymous, cookie-keyed)
-/dfir/r/[id]            shared result page (read-only)
+/dfir/r/:id             shared result page (read-only)
 ```
 
-### 3.3 API routes (`app/api/v1/...`)
+### 3.3 API routes (separate Cloudflare Worker at `api/`)
 
 ```
 GET  /api/v1/ioc/check?indicator=…    SSE stream, per-provider results
@@ -81,25 +90,48 @@ GET  /api/v1/export/pdf?share_id=…     PDF download
 
 ### 4.1 Layout
 
+API Worker (separate from SPA):
+
 ```
-lib/
-  providers/
-    virustotal.ts
-    abuseipdb.ts
-    shodan.ts
-    greynoise.ts
-    otx.ts
-    urlscan.ts
-    hybridanalysis.ts
-    pulsedive.ts
-  scoring.ts        composite-score algorithm (port of providers.py:calculate_score)
-  cache.ts          KV cache wrapper, per-type TTL, stale-while-revalidate
-  mitre.ts          provider-tag → ATT&CK technique map
-  share.ts          encode/decode share-link payloads
-  indicator.ts      type detection + defang/refang helpers
-content/
-  wiki/*.mdx        wiki articles (migrated from wiki_data.py)
+api/
+  src/
+    index.ts            router (itty-router or Hono) — dispatches /api/v1/* paths
+    routes/
+      ioc.ts            GET /api/v1/ioc/check (SSE)
+      phishing.ts       POST /api/v1/phishing/analyze
+      domain.ts         GET /api/v1/domain/lookup
+      exposure.ts       GET /api/v1/exposure/scan (SSE)
+      file.ts           POST /api/v1/file/analyze
+      wiki.ts           GET /api/v1/wiki/articles, /api/v1/wiki/:slug
+      share.ts          POST /api/v1/share, GET /api/v1/share/:id
+      recent.ts         GET /api/v1/recent
+      pdf.ts            GET /api/v1/export/pdf
+    providers/
+      virustotal.ts
+      abuseipdb.ts
+      shodan.ts
+      greynoise.ts
+      otx.ts
+      urlscan.ts
+      hybridanalysis.ts
+      pulsedive.ts
+    lib/
+      scoring.ts        composite-score (port of providers.py:calculate_score)
+      cache.ts          KV cache wrapper, per-type TTL, stale-while-revalidate
+      mitre.ts          provider-tag → ATT&CK technique map
+      share.ts          encode/decode share-link payloads
+      indicator.ts      type detection + defang/refang helpers
+      sse.ts            ReadableStream helpers for text/event-stream
+  wrangler.toml         API Worker config + bindings
+  package.json
+  tsconfig.json
+
+src/data/
+  wiki/                 markdown source files (migrated from dfir/api/wiki_data.py)
+  wiki-index.ts         build-time index used by the prerender plugin
 ```
+
+The SPA Worker stays at `wrangler.json` (repo root) and serves `./dist` only.
 
 ### 4.2 Provider adapter contract
 
@@ -168,7 +200,7 @@ The route handler returns a `ReadableStream` with `Content-Type: text/event-stre
 - "Share" button on any result page → POST `/api/v1/share` with the result snapshot → returns short id (e.g. `r/Xk2P9q`)
 - KV stores the snapshot, TTL 90 days
 - Read-only page, no recompute, "Re-run live" CTA links back to the tool with prefilled input
-- Open Graph image generated via `next/og` in a Workers route so links unfurl on Twitter/LinkedIn
+- Open Graph image generated via [Satori](https://github.com/vercel/satori) + `@cloudflare/workers-types` in a Workers route (`/api/v1/share/:id/og.png`) so links unfurl on Twitter/LinkedIn
 
 ### 5.3 Dark/light theme
 
@@ -214,11 +246,11 @@ Listed explicitly to keep scope tight:
 
 | # | Phase | Scope | Acceptance |
 |---|---|---|---|
-| 0 | Foundation | `@opennextjs/cloudflare` setup, `wrangler.toml`, KV/R2 bindings, secret placeholders, dev/prod envs | `wrangler dev` serves the existing one-page Next.js app on a `*.workers.dev` URL |
-| 1 | Portfolio migration | Pull `/`, `/about`, `/projects`, `/contact` content from `Pranith-Jain.github.io` into `app/(portfolio)/...`. Set up portfolio layout. | New Worker URL renders portfolio with visual + content parity to current site (manual diff sign-off on each route) |
+| 0 | Foundation | Clone `Pranith-Jain.github.io` locally as the unified working tree. Add `api/` directory with Worker scaffolding, `wrangler.toml`, KV/R2 bindings, secret placeholders, dev/prod envs. Set up the routes binding so `/api/v1/*` hits the API Worker. | `wrangler dev` for both Workers boots locally; `curl localhost:.../api/v1/health` returns `{"ok": true}`; SPA still builds and serves on its existing port |
+| 1 | DFIR consolidation | Pull DFIR planning docs and FastAPI reference code from `dfir/` repo into `docs/dfir-legacy/` of unified repo. Add `/dfir/*` child routes (placeholder pages) under existing `DFIR.tsx`. Update `DFIRNavigation.tsx` with new sub-routes. | Visiting `/dfir/ioc-check`, `/dfir/phishing`, etc. on the SPA renders a placeholder page; portfolio still passes existing tests |
 | 2 | Provider adapters + IOC tool | Port `providers.py` → `lib/providers/*.ts`, scoring, caching, IOC route handler with SSE, IOC checker UI | `/dfir/ioc-check` works live with VirusTotal + AbuseIPDB + GreyNoise at minimum; cache hit returns < 200ms |
 | 3 | Remaining adapters + tools | Shodan, OTX, URLScan, Hybrid Analysis, Pulsedive. Build phishing, domain, exposure, file analyzer UIs + routes | All 5 tool pages return live data from ≥ 2 providers each on cold cache; ≥ 1 of those providers must be currently in good health |
-| 4 | Wiki | Migrate `wiki_data.py` content → `content/wiki/*.mdx`. Build index + article pages with `generateStaticParams` | `/dfir/wiki` lists 5 categories, articles render and are crawlable |
+| 4 | Wiki | Migrate `wiki_data.py` content → `src/data/wiki/*.md` (frontmatter + markdown). Build index + article pages. Set up `vite-plugin-prerender` (or equivalent) to emit static HTML for each `/dfir/wiki/:slug` at build time. | `/dfir/wiki` lists 5 categories, individual article URLs return server-rendered HTML in `view-source:` (crawlable) |
 | 5 | New features (B) | Dashboard, share links, theme toggle, MITRE chips, PDF export | Each feature has at least one happy-path test |
 | 6 | Polish & cutover | Rate limiting, circuit breakers, OG images, SEO metadata, error boundaries, delete `api/` Python code, archive old portfolio repo, point `pranithjain.qzz.io` at new Worker | Lighthouse ≥ 90 on `/` and `/dfir`; all tool pages return data with p95 < 3s |
 
@@ -235,9 +267,9 @@ Listed explicitly to keep scope tight:
 
 ## 10. Success criteria
 
-- `pranithjain.qzz.io/` serves the migrated portfolio with parity to today
-- `pranithjain.qzz.io/dfir/<tool>` serves all 5 tools with live results
-- Wiki indexed by Google within 4 weeks of cutover
+- `pranithjain.qzz.io/` serves the existing portfolio with parity to today (no regression)
+- `pranithjain.qzz.io/dfir/<tool>` serves all 5 tools with live results from ≥ 2 providers each
+- Wiki articles return prerendered HTML and are indexed by Google within 4 weeks of cutover
 - p95 tool response time < 3s with cache warm
-- Zero secrets in git history
-- Old `Pranith-Jain.github.io` repo archived; old `api/` directory deleted from this repo
+- Zero secrets in git history (verified by pre-commit secret scan)
+- Old standalone `dfir` repo archived; FastAPI reference code deleted from unified repo after phase 2 ships
