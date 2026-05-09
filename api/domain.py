@@ -74,6 +74,17 @@ class DomainChecker:
         }
     
     async def get_whois(self, domain: str) -> Dict[str, Any]:
+        whois_result = self._try_python_whois(domain)
+        if whois_result and whois_result.get("registrar"):
+            return whois_result
+
+        rdap_result = await self._try_rdap(domain)
+        if rdap_result and rdap_result.get("registrar"):
+            return rdap_result
+
+        return whois_result or rdap_result or {"error": "WHOIS/RDAP lookup failed"}
+
+    def _try_python_whois(self, domain: str) -> Optional[Dict[str, Any]]:
         try:
             w = whois.whois(domain)
             return {
@@ -81,14 +92,89 @@ class DomainChecker:
                 "creation_date": str(w.creation_date) if w.creation_date else None,
                 "expiration_date": str(w.expiration_date) if w.expiration_date else None,
                 "updated_date": str(w.updated_date) if w.updated_date else None,
-                "name_servers": w.name_servers if w.name_servers else [],
+                "name_servers": list(w.name_servers) if w.name_servers else [],
                 "status": w.status if w.status else [],
                 "emails": w.emails if w.emails else [],
                 "country": getattr(w, 'country', None),
-                "org": getattr(w, 'org', None)
+                "org": getattr(w, 'org', None),
+                "source": "whois",
             }
         except Exception as e:
-            return {"error": str(e)}
+            return {"error": str(e), "source": "whois"}
+
+    async def _try_rdap(self, domain: str) -> Optional[Dict[str, Any]]:
+        try:
+            timeout = aiohttp.ClientTimeout(total=10)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.get(
+                    f"https://rdap.org/domain/{domain}",
+                    allow_redirects=True,
+                    headers={
+                        "Accept": "application/rdap+json",
+                        "User-Agent": "Mozilla/5.0 dfir-platform/1.0",
+                    },
+                ) as resp:
+                    if resp.status != 200:
+                        return None
+                    data = await resp.json(content_type=None)
+        except Exception:
+            return None
+
+        registrar = None
+        emails: List[str] = []
+        org = None
+        country = None
+
+        for entity in data.get("entities", []) or []:
+            roles = entity.get("roles") or []
+            vcard_array = entity.get("vcardArray") or []
+            if len(vcard_array) < 2 or not isinstance(vcard_array[1], list):
+                continue
+            for field in vcard_array[1]:
+                if not isinstance(field, list) or len(field) < 4:
+                    continue
+                fname = field[0]
+                value = field[3]
+                if fname == "fn" and "registrar" in roles and not registrar and isinstance(value, str):
+                    registrar = value
+                elif fname == "email" and isinstance(value, str):
+                    emails.append(value)
+                elif fname == "org" and "registrant" in roles and not org and isinstance(value, str):
+                    org = value
+                elif fname == "adr" and "registrant" in roles and isinstance(value, list) and len(value) >= 7:
+                    country = value[6] or country
+
+        creation_date = None
+        expiration_date = None
+        updated_date = None
+        for event in data.get("events", []) or []:
+            action = event.get("eventAction")
+            date = event.get("eventDate")
+            if action == "registration":
+                creation_date = date
+            elif action == "expiration":
+                expiration_date = date
+            elif action == "last changed":
+                updated_date = date
+
+        nameservers = []
+        for ns in data.get("nameservers", []) or []:
+            name = ns.get("ldhName")
+            if name:
+                nameservers.append(name.lower())
+
+        return {
+            "registrar": registrar,
+            "creation_date": creation_date,
+            "expiration_date": expiration_date,
+            "updated_date": updated_date,
+            "name_servers": nameservers,
+            "status": data.get("status", []) or [],
+            "emails": sorted(set(emails)),
+            "country": country,
+            "org": org,
+            "source": "rdap",
+        }
     
     async def get_dns_records(self, domain: str) -> Dict[str, Any]:
         record_types = ['A', 'AAAA', 'NS', 'TXT', 'CNAME', 'SOA', 'CAA']

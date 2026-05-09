@@ -1,22 +1,41 @@
+# Secrets and local env
+.env
+api/.env
+.env.local
+.env.*.local
+web/.env.local
+*.pem
+*.key
+
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+*.egg-info/
+.venv/
+venv/
 api/.venv/
 api/api.log
 api/*.db
+api.log
+web.log
 
 # Node.js
+node_modules/
+dist/
+build/
+.wrangler/
 web/node_modules/
 web/.next/
 web/out/
 web/build/
 
-# Environment variables
-.env
-api/.env
-web/.env.local
-
 # OS files
 .DS_Store
 Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp

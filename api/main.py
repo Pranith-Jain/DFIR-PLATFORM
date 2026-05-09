@@ -472,6 +472,7 @@ async def get_intel_feed():
 async def get_research_feeds():
     """Get security research and news from free RSS feeds"""
     feeds = [
+        # Security news + research
         {"name": "The Hacker News", "url": "https://feeds.feedburner.com/TheHackersNews", "category": "news"},
         {"name": "BleepingComputer", "url": "https://www.bleepingcomputer.com/feed/", "category": "news"},
         {"name": "Krebs on Security", "url": "https://krebsonsecurity.com/feed/", "category": "journalism"},
@@ -482,6 +483,14 @@ async def get_research_feeds():
         {"name": "Help Net Security", "url": "https://www.helpnetsecurity.com/feed/", "category": "news"},
         {"name": "The Daily Swig", "url": "https://portswigger.net/daily-swig/rss", "category": "news"},
         {"name": "CISO Series", "url": "https://cisoseries.com/feed/", "category": "commentary"},
+        {"name": "CISA Alerts", "url": "https://www.cisa.gov/uscert/ncas/alerts.xml", "category": "advisory"},
+        # Hacker News + YC (tech / startup signal)
+        {"name": "Hacker News", "url": "https://hnrss.org/frontpage", "category": "tech"},
+        {"name": "Ask HN", "url": "https://hnrss.org/ask", "category": "tech"},
+        {"name": "Show HN", "url": "https://hnrss.org/show", "category": "tech"},
+        {"name": "HN AI", "url": "https://hnrss.org/newest?q=AI", "category": "tech"},
+        {"name": "HN Cybersecurity", "url": "https://hnrss.org/newest?q=cybersecurity", "category": "tech"},
+        {"name": "YC Blog", "url": "https://www.ycombinator.com/blog/rss", "category": "tech"},
     ]
     results = []
     async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:

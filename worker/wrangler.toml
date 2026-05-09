@@ -1,0 +1,25 @@
+name = "dfir-worker"
+main = "src/index.ts"
+compatibility_date = "2024-10-01"
+
+# Optional: KV namespace for persistent cache of public blocklists.
+# Uncomment after running: wrangler kv:namespace create DFIR_CACHE
+# [[kv_namespaces]]
+# binding = "DFIR_CACHE"
+# id = "<paste-id-from-wrangler-output>"
+
+# Secrets are set via:
+#   wrangler secret put VIRUSTOTAL_API_KEY
+#   wrangler secret put ABUSEIPDB_API_KEY
+#   wrangler secret put SHODAN_API_KEY
+#   wrangler secret put GREYNOISE_API_KEY
+#   wrangler secret put OTX_API_KEY
+#   wrangler secret put URLSCAN_API_KEY
+#   wrangler secret put PULSEDIVE_API_KEY
+#   wrangler secret put ABUSECH_AUTH_KEY      # unlocks ThreatFox/MalwareBazaar/URLhaus dynamic lookups (free at auth.abuse.ch)
+#
+# Free providers (Tor exit list, Spamhaus DROP, Feodo blocklist, Cloudflare DoH)
+# work without any keys.
+
+[observability]
+enabled = true
