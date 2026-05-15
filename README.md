@@ -1,62 +1,51 @@
 # DFIR Platform
 
-Design notes, prototypes, and research for an open DFIR platform aimed at small teams who want analyst-grade tooling without paid subscriptions.
+> **Status:** Design archive. The shipped implementation now lives in the monorepo at [github.com/Pranith-Jain/Pranith-Jain.github.io](https://github.com/Pranith-Jain/Pranith-Jain.github.io) — this repo contains the original prototypes, design notes, and planning documents.
 
-> **Status:** Most code here is prototype work. The shipped, deployed implementation now lives in the portfolio repo at [github.com/Pranith-Jain/Pranith-Jain.github.io](https://github.com/Pranith-Jain/Pranith-Jain.github.io) under `api/src/*` and `src/pages/dfir/*`. This repo is kept as the design trail.
-
-**Live tools:** [pranithjain.qzz.io/dfir](https://pranithjain.qzz.io/dfir)
+**Live:** [pranithjain.qzz.io/dfir](https://pranithjain.qzz.io/dfir) — 65+ tools, free, no signup.
 
 ---
 
-## What was prototyped here
+## Evolution
 
-| Folder | What it is | State |
-|---|---|---|
-| `worker/` | Standalone Cloudflare Worker IOC checker (15 providers). The original proof-of-concept for "do this on the edge with no backend." | **Superseded** by the portfolio integration |
-| `api/` | Python FastAPI prototype: phishing analyzer, IOC providers, exposure scanner, file analyzer, wiki, intel feeds | Reference only |
-| `cli/` | DFIR CLI scratch | Reference only |
-| `web/` | Next.js prototype web frontend | Reference only |
-| `docs/` | Design specs and planning notes | Live design trail |
-| `DFIR-PLATFORM-PLAN.md` | Original platform plan: services, APIs, roadmap | Live design trail |
+This repo started as separate prototypes across multiple languages before consolidating into a single Cloudflare Worker deployment:
 
-## The architecture that actually shipped
+| Phase | What | Where it went |
+|-------|------|---------------|
+| 1 | Standalone Cloudflare Worker IOC checker (15 providers) | Rewritten into `api/src/providers/*` (now 24 providers) |
+| 2 | Python FastAPI prototype (phishing analyzer, exposure scanner, file analyzer, threat intel feeds) | Reference only — logic ported to TypeScript/Hono |
+| 3 | Next.js web frontend prototype | Replaced by React 18 + Vite + Tailwind in the monorepo |
+| 4 | CLI tools | Reference only — functionality superseded by the web UI |
 
-Everything in `worker/` and `api/` was rewritten and consolidated into the portfolio repo, where it now runs as a single Cloudflare Worker that serves both the React SPA and the `/api/v1/*` API.
+## What shipped
 
-| Concern | Where it lives in the deployed stack |
-|---|---|
-| 22 IOC providers (VT, AbuseIPDB, Shodan, OTX, URLScan, Hybrid Analysis, the abuse.ch trio, Feodo, Spamhaus, Tor, OpenPhish, DoH, Bitwire, Blocklist.de, Binary Defense, Ipsum, Phishing Army, CIRCL Hashlookup, TweetFeed, CINS Army) | portfolio:`api/src/providers/*` |
-| IOC checker route with parallel SSE streaming + weighted scoring | portfolio:`api/src/routes/ioc.ts` + `api/src/lib/scoring.ts` |
-| Domain / file / phishing / exposure routes | portfolio:`api/src/routes/{domain,file,phishing,exposure}.ts` |
-| Subdomain takeover with 15 service fingerprints | portfolio:`api/src/routes/takeover.ts` |
-| STIX 2.1 viewer (interactive graph) | portfolio:`src/pages/dfir/StixViewer.tsx` + `src/lib/dfir/stix-graph.ts` |
-| Cyber threat map (geolocated choropleth across 7 IOC sources) | portfolio:`api/src/routes/threat-map.ts` + `src/pages/dfir/ThreatMap.tsx` |
-| Dark web watch (15 feeds, persistent watchlist, regex search) | portfolio:`src/pages/dfir/DarkWeb.tsx` |
-| MITRE ATT&CK matrix with technique drawer | portfolio:`src/pages/dfir/MitreMatrix.tsx` |
-| Daily / weekly intel briefings (cron) | portfolio:`api/src/lib/briefing-builder.ts` + `api/src/routes/briefings.ts` |
-| RSS proxy with SSRF allow-list (50+ hosts) | portfolio:`api/src/routes/feeds.ts` |
-| KV caching (briefings) + Cache API caching (provider results, blocklists) | portfolio:`api/src/lib/cache.ts` + `api/src/lib/ratelimit.ts` |
+The monorepo now contains **three surfaces in one deploy:**
 
-## How to read this repo
+### DFIR Toolkit — 65+ tools
+IOC/Hash Checker (24 sources, streaming), Malware Scanner, Phishing Analyzer, Domain/IP Reputation (19 DNSBLs via DoH), URL/Email Reputation, CVE Lookup (NVD/EPSS/KEV), STIX Viewer, Diamond Model, MITRE ATT&CK, YARA/Sigma Playground, and 55+ more.
 
-Start with `DFIR-PLATFORM-PLAN.md` — that's the original design doc. Then:
+### Threat Intel Platform — 20+ surfaces
+Ransomware leak-site tracking, CVE/KCV feed, cross-source IOC correlation (18 feeds), Telegram/Reddit/Bluesky firehoses, auto-generated daily briefings, typosquat domain monitoring, actor timelines, and a 90+ source aggregation.
 
-- `worker/src/` — minimal-deps TypeScript implementation of an IOC checker on the edge. Useful as a self-contained reference if you want to build the same tool without bundling an entire React app.
-- `api/` — Python implementation of a richer back-end (phishing analyzer, exposure scanner, etc.). Includes some logic that's not in the deployed Worker version (e.g. the `whois` library does TCP whois on port 43, which Workers can't do).
-- `docs/superpowers/plans/` — staged implementation plans.
+### Email Security Suite
+BEC spoofability scoring with per-gap remediation records, email reputation with 19 DNSBL blacklist checks, phishing email header analysis, and DMARC/SPF/DKIM/BIMI/MTA-STS/TLS-RPT inspection.
 
-## Why two repos
+### Key stats
+- 24 IOC providers, 19 DNSBL sources
+- 181 unit tests, 21 test files
+- 0 API keys required (works with public sources only)
+- 158 static assets, 760 KB total, 18ms worker startup
+- WCAG 2.2 AA compliant, 100/100 Lighthouse
 
-| Concern | Resolution |
-|---|---|
-| Portfolio (the public site) deploys frequently and needs to push to a custom domain | Lives in `Pranith-Jain.github.io`, deployed via `wrangler deploy` |
-| Long-form design specs and prototype code | Live here, decoupled from the deploy cadence |
-| Prototype work that experiments with stacks (Python FastAPI, Next.js) without committing to them in production | Live here |
+## Design documents still relevant here
 
-## Contributing
+- [DFIR-PLATFORM-PLAN.md](./DFIR-PLATFORM-PLAN.md) — original platform plan and architecture decisions
+- [docs/](./docs) — detailed design specs for individual services
+- [web/](./web) — Next.js frontend prototype (reference only)
+- [api/](./api) — Python FastAPI prototype (reference only)
 
-PRs against the deployed implementation should go to the portfolio repo. Issues / design discussion belong here.
+## Quick links
 
-## License
-
-Source files are MIT unless the file headers say otherwise.
+- **Live:** [pranithjain.qzz.io/dfir](https://pranithjain.qzz.io/dfir)
+- **Threat Intel:** [pranithjain.qzz.io/threatintel](https://pranithjain.qzz.io/threatintel)
+- **Source:** [github.com/Pranith-Jain/Pranith-Jain.github.io](https://github.com/Pranith-Jain/Pranith-Jain.github.io)
