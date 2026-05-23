@@ -1,0 +1,19 @@
+# Security headers for all routes.
+# Content-Security-Policy is INTENTIONALLY ABSENT here — the worker
+# (worker/index.ts `withSecurityHeaders`) builds it per-response with a
+# fresh nonce. Setting CSP here would race with the worker and freeze
+# the policy at this static (unsafe-inline) string, defeating the nonce.
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+
+# Hashed asset bundles never change — long immutable cache
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Topojson is 190KB and stable; cache for a week
+/world-110m.json
+  Cache-Control: public, max-age=604800

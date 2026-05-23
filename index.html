@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth" id="top">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Primary Meta Tags -->
+    <title>Pranith Jain | Security Analyst & Detection Engineer | DFIR Toolkit, Threat Intel, Email Security</title>
+    <meta
+      name="description"
+      content="Pranith Jain is a security analyst and detection engineer. He investigates phishing, BEC, and malware incidents for 150+ startups, secures 1,300+ domains with SPF, DKIM, and DMARC, and ships a free DFIR toolkit on Cloudflare Workers. 60+ tools across 11 categories, 90+ threat intel sources, no signup, live at /dfir."
+    />
+    <meta name="keywords" content="security analyst, detection engineer, DFIR toolkit, threat intelligence, phishing investigation, BEC detection, email security, DMARC, SPF, DKIM, IOC analysis, subdomain takeover, JWT inspector, MITRE ATT&CK, MITRE ATT&CK mapping, Cloudflare Workers, edge security, OSINT, SOC automation, incident response, n8n, Pranith Jain" />
+    <meta name="author" content="Pranith Jain" />
+    <meta name="robots" content="index, follow" />
+    <meta name="language" content="English" />
+    
+    <!-- Theme and Security -->
+    <meta name="theme-color" content="#2c3ee5" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <!-- X-Frame-Options + X-Content-Type-Options + Permissions-Policy live in
+         public/_headers (HTTP-header-delivered only — meta versions trigger
+         browser console warnings). X-XSS-Protection is deprecated everywhere
+         and intentionally omitted; CSP covers the same surface better. -->
+    
+    <!-- Content Security Policy - carefully tuned for Google Fonts, inline styles (Tailwind), and theme script -->
+    <meta 
+      http-equiv="Content-Security-Policy" 
+      content="default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://cloudflare-dns.com https://cloudflareinsights.com https://*.cloudflareinsights.com; base-uri 'self'; form-action 'self';"
+    />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://pranithjain.qzz.io" />
+
+    <!-- RSS auto-discovery for the daily/weekly threat briefings -->
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="Pranith Jain — DFIR Threat Briefings"
+      href="https://pranithjain.qzz.io/api/v1/briefings/rss"
+    />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://pranithjain.qzz.io" />
+    <meta property="og:title" content="Pranith Jain | DFIR Toolkit, Threat Intel, Email Security" />
+    <meta property="og:description" content="Security analyst and detection engineer. 1,300+ domains secured, 250+ phishing and BEC incidents resolved. Free DFIR toolkit at /dfir, hosted on Cloudflare Workers with 60+ tools across 11 categories and 90+ threat intel sources." />
+    <meta property="og:image" content="https://pranithjain.qzz.io/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Pranith Jain — security analyst and detection engineer. Investigating attacks at human scale; building defenders at AI scale." />
+    <meta property="og:site_name" content="Pranith Jain Portfolio" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://pranithjain.qzz.io" />
+    <meta property="twitter:title" content="Pranith Jain | DFIR Toolkit, Threat Intel, Email Security" />
+    <meta property="twitter:description" content="Security analyst and detection engineer. 1,300+ domains secured, 250+ incidents resolved. Free DFIR toolkit at /dfir." />
+    <meta property="twitter:image" content="https://pranithjain.qzz.io/og-image.png" />
+    <meta property="twitter:image:alt" content="Pranith Jain — security analyst and detection engineer. Investigating attacks at human scale; building defenders at AI scale." />
+
+    <!-- Favicons -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Crect width='36' height='36' rx='8' fill='%232c3ee5'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' fill='white' font-family='Arial, sans-serif' font-weight='bold' font-size='16'%3EPJ%3C/text%3E%3C/svg%3E" />
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Crect width='36' height='36' rx='8' fill='%232c3ee5'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' fill='white' font-family='Arial, sans-serif' font-weight='bold' font-size='16'%3EPJ%3C/text%3E%3C/svg%3E" />
+    
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Preconnect to Google Fonts for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+    
+    <!-- The previous preload pinned Poppins regular (400), which the CSS below doesn't even request.
+         Browsers were downloading an unused font on every cold visit. Removed entirely; Google Fonts
+         delivers the right subsets via the css2 request below, and font-display: swap covers FOIT. -->
+
+    <!-- Google Fonts with font-display swap for performance.
+         Type system (2026-05): Bricolage Grotesque (display, characterful grotesque),
+         Hanken Grotesk (body, clean + readable), JetBrains Mono (IOC/terminal data).
+         Replaced the generic Inter/Poppins/Space Grotesk trio. -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Hanken+Grotesk:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Hanken+Grotesk:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Theme detection script - runs before page render to prevent flash -->
+    <script>
+      (function() {
+        try {
+          const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) {
+          // Fail silently if localStorage is not available (e.g., private browsing)
+          console.warn('Theme detection failed:', e);
+        }
+      })();
+    </script>
+  </head>
+  <!-- No `overflow-x-hidden` on body: it creates a scroll containing
+       block at document level, which breaks mobile pinch-zoom panning
+       (user can zoom in but can't pan past the original viewport
+       edge to see clipped content). Both Layout.tsx (portfolio routes)
+       and AppShell.tsx (/dfir, /threatintel) already use `overflow-x-clip`
+       on their inner wrappers to contain decorative blobs without
+       creating a scroll context; the body-level rule was redundant. -->
+  <body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50 transition-colors duration-300 motion-reduce:transition-none">
+    <!-- Skip to content link for accessibility -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-brand-600 focus:text-white focus:rounded-lg focus:font-medium">
+      Skip to main content
+    </a>
+    
+    <!-- Main app root -->
+    <div id="root"></div>
+    
+    <!-- App script -->
+    <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Noscript fallback for users without JavaScript -->
+    <noscript>
+      <div style="padding: 2rem; text-align: center; font-family: system-ui, sans-serif;">
+        <h1 style="font-size: 1.5rem; margin-bottom: 1rem; color: #2c3ee5;">JavaScript Required</h1>
+        <p style="color: #475569; max-width: 600px; margin: 0 auto;">
+          This portfolio website requires JavaScript to display properly. Please enable JavaScript in your browser settings, or contact me directly at <a href="mailto:hello@pranithjain.qzz.io" style="color: #2c3ee5;">hello@pranithjain.qzz.io</a>.
+        </p>
+      </div>
+    </noscript>
+  </body>
+</html>

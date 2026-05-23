@@ -1,0 +1,226 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: theme('fontFamily.sans');
+    scroll-behavior: smooth;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: theme('fontFamily.display');
+    /* Bricolage Grotesque has real character at display sizes — tighten the
+       tracking and let its optical-size axis kick in so headings read
+       authored, not default. */
+    letter-spacing: -0.018em;
+    font-optical-sizing: auto;
+  }
+
+  body {
+    /* Hanken Grotesk reads better with its contextual/ligature features on. */
+    font-feature-settings: 'cv11', 'ss01';
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  html:not(.dark) {
+    color-scheme: light;
+  }
+
+  :focus-visible {
+    outline: 2px solid theme('colors.brand.400');
+    outline-offset: 3px;
+  }
+
+  /* iOS Safari auto-zooms when a focused input/textarea has a computed
+   * font-size below 16px. Many of the data-heavy pages render search /
+   * filter inputs at `text-sm` (14px) for desktop density, which yanks the
+   * viewport on every focus on phones. Force 16px on phone widths; the
+   * design intent (compact text on desktop) is preserved on sm+. The `!`
+   * (= !important) is necessary because Tailwind utility classes on each
+   * input would otherwise win the cascade.
+   */
+  @media (max-width: 639px) {
+    input:not([type='checkbox']):not([type='radio']):not([type='range']),
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-slate-100 dark:bg-slate-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-slate-300 transition-colors hover:bg-slate-400 dark:bg-slate-700 dark:hover:bg-slate-600;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply border border-slate-200/60 bg-white/70 backdrop-blur-md lg:backdrop-blur-xl transition-all duration-300;
+  }
+
+  .dark .glass {
+    @apply border-white/10 bg-slate-900/60;
+  }
+
+  /* Calm sibling to .glass for sections where every-card-translucent reads
+   * as visual noise (list-of-tiles surfaces: Skills, Solutions, Companies,
+   * Memberships, Certifications). Reuses the rest of the design tokens. */
+  .surface {
+    @apply border border-slate-200 bg-white transition-all duration-300;
+  }
+
+  .dark .surface {
+    @apply border-slate-800 bg-slate-900;
+  }
+}
+
+@layer utilities {
+  .bg-dot-grid {
+    background-image: radial-gradient(rgba(15, 23, 42, 0.08) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  .dark .bg-dot-grid {
+    background-image: radial-gradient(rgba(148, 163, 184, 0.18) 1px, transparent 1px);
+  }
+
+  .shadow-glow {
+    box-shadow: 0 0 20px -5px rgba(37, 99, 235, 0.5);
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   Entrance animations
+   Used as Tailwind-ish utility classes (animate-fade-in, animate-fade-in-up)
+   to replace framer-motion's <motion.X initial=... animate=... /> pattern
+   across the DFIR pages. Single 400ms ease-out, fill-mode `both` so the
+   element starts opaque-zero and ends opaque-one without any flash.
+
+   The `prefers-reduced-motion: reduce` block above already neutralises
+   these for users who opt out, so no per-utility tweak needed.
+   ───────────────────────────────────────────────────────────────────── */
+@keyframes dfir-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dfir-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: dfir-fade-in 0.4s ease-out both;
+}
+
+.animate-fade-in-up {
+  animation: dfir-fade-in-up 0.4s ease-out both;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   Orchestrated page-load: one well-staged reveal beats scattered
+   micro-interactions. Put `.stagger` on a container; its direct children
+   fade-rise in sequence. Capped at 12 so long grids don't lag the last
+   tile. Neutralised by the prefers-reduced-motion block above.
+   ───────────────────────────────────────────────────────────────────── */
+.stagger > * {
+  animation: dfir-fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.stagger > *:nth-child(1) {
+  animation-delay: 40ms;
+}
+.stagger > *:nth-child(2) {
+  animation-delay: 80ms;
+}
+.stagger > *:nth-child(3) {
+  animation-delay: 120ms;
+}
+.stagger > *:nth-child(4) {
+  animation-delay: 160ms;
+}
+.stagger > *:nth-child(5) {
+  animation-delay: 200ms;
+}
+.stagger > *:nth-child(6) {
+  animation-delay: 240ms;
+}
+.stagger > *:nth-child(7) {
+  animation-delay: 280ms;
+}
+.stagger > *:nth-child(8) {
+  animation-delay: 320ms;
+}
+.stagger > *:nth-child(9) {
+  animation-delay: 360ms;
+}
+.stagger > *:nth-child(n + 10) {
+  animation-delay: 400ms;
+}

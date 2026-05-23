@@ -1,0 +1,1278 @@
+export interface RSSFeed {
+  id: string;
+  name: string;
+  url: string;
+  description: string;
+  category: 'vulnerability' | 'advisory' | 'threat-intel' | 'news' | 'general' | 'ics-cert' | 'tech';
+  icon?: string;
+  source?: string;
+  language?: string;
+}
+
+export const rssFeeds: RSSFeed[] = [
+  // ============================================================================
+  // GOVERNMENT & SECURITY ADVISORIES
+  // ============================================================================
+  {
+    id: 'cisa-alerts',
+    name: 'CISA Alerts',
+    url: 'https://www.cisa.gov/uscert/ncas/alerts.xml',
+    description: 'US-CERT Current Activity - Latest cybersecurity alerts and advisories',
+    category: 'advisory',
+    source: 'CISA',
+    language: 'en-US',
+  },
+  {
+    id: 'cisa-medical-advisories',
+    name: 'CISA Medical Advisories',
+    url: 'https://www.cisa.gov/uscert/ncas/current-activity.xml',
+    description: 'Healthcare and medical device cybersecurity advisories',
+    category: 'advisory',
+    source: 'CISA',
+    language: 'en-US',
+  },
+
+  // ============================================================================
+  // THREAT INTELLIGENCE
+  // ============================================================================
+
+  // Vendor research feeds (probed and confirmed returning XML)
+  {
+    id: 'talos',
+    name: 'Cisco Talos Intelligence',
+    url: 'https://blog.talosintelligence.com/rss/',
+    description: 'Threat research from Cisco Talos — daily IOCs, malware analysis, campaign tracking',
+    category: 'threat-intel',
+    source: 'talosintelligence.com',
+    language: 'en',
+  },
+  {
+    id: 'unit42',
+    name: 'Unit 42 (Palo Alto)',
+    url: 'https://unit42.paloaltonetworks.com/feed/',
+    description: 'Active campaign tracking and malware analysis',
+    category: 'threat-intel',
+    source: 'unit42.paloaltonetworks.com',
+    language: 'en',
+  },
+  {
+    id: 'eset',
+    name: 'ESET WeLiveSecurity',
+    url: 'https://www.welivesecurity.com/feed/',
+    description: 'European-focused threat research, esp. Russia/Ukraine cyber operations',
+    category: 'threat-intel',
+    source: 'welivesecurity.com',
+    language: 'en',
+  },
+  {
+    id: 'kaspersky-securelist',
+    name: 'Kaspersky SecureList',
+    url: 'https://securelist.com/feed/',
+    description: 'Long-tail threat and malware research from Kaspersky GReAT',
+    category: 'threat-intel',
+    source: 'securelist.com',
+    language: 'en',
+  },
+  {
+    id: 'crowdstrike',
+    name: 'CrowdStrike Blog',
+    url: 'https://www.crowdstrike.com/blog/feed/',
+    description: 'Endpoint-driven adversary intelligence and incident reports',
+    category: 'threat-intel',
+    source: 'crowdstrike.com',
+    language: 'en',
+  },
+  {
+    id: 'sentinelone-labs',
+    name: 'SentinelOne Labs',
+    url: 'https://www.sentinelone.com/labs/feed/',
+    description: 'Malware reverse engineering and threat hunting',
+    category: 'threat-intel',
+    source: 'sentinelone.com',
+    language: 'en',
+  },
+
+  // Dark web, ransomware, and breach trackers
+  {
+    id: 'darkwebinformer',
+    name: 'Dark Web Informer',
+    url: 'https://darkwebinformer.com/rss/',
+    description: 'Daily dark web intelligence, ransomware leak-site posts, breach reports, and underground chatter',
+    category: 'threat-intel',
+    source: 'darkwebinformer.com',
+    language: 'en',
+  },
+  {
+    id: 'ransomware-live',
+    name: 'Ransomware.live',
+    url: 'https://ransomware.live/rss.xml',
+    description: 'Active ransomware victim and leak-site tracker, updated continuously',
+    category: 'threat-intel',
+    source: 'ransomware.live',
+    language: 'en',
+  },
+  // databreachtoday.com RSS endpoint 404s as of 2026-05. Replaced with Threatpost.
+  {
+    id: 'threatpost',
+    name: 'Threatpost',
+    url: 'https://threatpost.com/feed/',
+    description:
+      'Threatpost — enterprise vulnerability reporting, zero-day tracking, and breach coverage. Cybersecurity news for security pros.',
+    category: 'news',
+    source: 'threatpost.com',
+    language: 'en-US',
+  },
+  {
+    id: 'bleepingcomputer-breaches',
+    name: 'BleepingComputer · Data Breaches',
+    url: 'https://www.bleepingcomputer.com/feed/',
+    description:
+      'BleepingComputer breach coverage via main feed — renamed 2026-05; was a separate category feed that now 404s',
+    category: 'threat-intel',
+    source: 'bleepingcomputer.com',
+    language: 'en-US',
+  },
+  {
+    id: 'hackread-breaches',
+    name: 'HackRead · Data Breaches',
+    url: 'https://www.hackread.com/category/security/data-breach/feed/',
+    description: 'HackRead breach reporting — covers global incidents with notable focus on India + emerging markets',
+    category: 'threat-intel',
+    source: 'hackread.com',
+    language: 'en',
+  },
+  {
+    id: 'securityweek-breaches',
+    name: 'SecurityWeek · Cyber Incidents',
+    url: 'https://www.securityweek.com/category/cybercrime/feed/',
+    description: 'SecurityWeek cybercrime category — enterprise breach incident reporting + regulator notices',
+    category: 'threat-intel',
+    source: 'securityweek.com',
+    language: 'en',
+  },
+  {
+    id: 'cyberscoop-breaches',
+    name: 'CyberScoop',
+    url: 'https://cyberscoop.com/feed/',
+    description: 'CyberScoop — US government + enterprise cyber incident coverage, breaches, indictments',
+    category: 'threat-intel',
+    source: 'cyberscoop.com',
+    language: 'en',
+  },
+  {
+    id: 'databreaches',
+    name: 'DataBreaches.net',
+    url: 'https://www.databreaches.net/feed/',
+    description:
+      'Breach reporting and analysis from Dissent. Wide coverage of healthcare, education, and government incidents',
+    category: 'threat-intel',
+    source: 'databreaches.net',
+    language: 'en',
+  },
+  {
+    id: 'dfir-report',
+    name: 'The DFIR Report',
+    url: 'https://thedfirreport.com/feed/',
+    description: 'In-depth incident response writeups with full IOC and TTP detail',
+    category: 'threat-intel',
+    source: 'thedfirreport.com',
+    language: 'en',
+  },
+  {
+    id: 'the-record',
+    name: 'The Record',
+    url: 'https://therecord.media/feed',
+    description: 'Cybersecurity reporting from Recorded Future, with strong dark web and ransomware coverage',
+    category: 'threat-intel',
+    source: 'therecord.media',
+    language: 'en',
+  },
+  {
+    id: 'curated-intel',
+    name: 'Curated Intelligence',
+    url: 'https://www.curatedintel.org/feeds/posts/default',
+    description: 'Threat actor and ransomware research from the Curated Intelligence collective',
+    category: 'threat-intel',
+    source: 'curatedintel.org',
+    language: 'en',
+  },
+
+  // Reddit communities (RSS via .rss suffix)
+
+  // Vendor labs and research teams (curated from awesome-threat-intel-rss and cudeso/OPML-Security-Feeds)
+  {
+    id: 'google-project-zero',
+    name: 'Google Project Zero',
+    url: 'https://googleprojectzero.blogspot.com/feeds/posts/default',
+    description: 'Zero-day vulnerability research from the Google Project Zero team',
+    category: 'threat-intel',
+    source: 'googleprojectzero.blogspot.com',
+    language: 'en',
+  },
+  {
+    id: 'checkpoint-research',
+    name: 'Check Point Research',
+    url: 'https://research.checkpoint.com/feed/',
+    description: 'Malware reverse engineering and active campaign tracking from Check Point',
+    category: 'threat-intel',
+    source: 'research.checkpoint.com',
+    language: 'en',
+  },
+  // sophos-xops RSS endpoint times out as of 2026-05. Replaced with Akamai Security Research.
+  {
+    id: 'akamai-security',
+    name: 'Akamai Security Research',
+    url: 'https://www.akamai.com/blog/rss/security-research.rss',
+    description: 'Akamai Security Research — botnet tracking, DDoS analysis, and web application threat research.',
+    category: 'threat-intel',
+    source: 'akamai.com',
+    language: 'en-US',
+  },
+  {
+    id: 'malwarebytes-labs',
+    name: 'Malwarebytes Labs',
+    url: 'https://blog.malwarebytes.com/feed/',
+    description: 'Consumer and enterprise malware research from Malwarebytes Labs',
+    category: 'threat-intel',
+    source: 'malwarebytes.com',
+    language: 'en',
+  },
+  {
+    id: 'huntress',
+    name: 'Huntress Blog',
+    url: 'https://www.huntress.com/blog/rss.xml',
+    description: 'Detection content and incident reports from the Huntress threat ops team',
+    category: 'threat-intel',
+    source: 'huntress.com',
+    language: 'en',
+  },
+  {
+    id: 'red-canary',
+    name: 'Red Canary',
+    url: 'https://redcanary.com/feed/',
+    description: 'Detection engineering and threat intel from the Red Canary team',
+    category: 'threat-intel',
+    source: 'redcanary.com',
+    language: 'en',
+  },
+  {
+    id: 'malware-traffic-analysis',
+    name: 'Malware Traffic Analysis',
+    url: 'https://www.malware-traffic-analysis.net/blog-entries.rss',
+    description: "Brad Duncan's daily PCAPs, IOCs, and malware samples. One of the highest-signal IOC feeds online",
+    category: 'threat-intel',
+    source: 'malware-traffic-analysis.net',
+    language: 'en',
+  },
+  {
+    id: 'doublepulsar',
+    name: 'DoublePulsar (Kevin Beaumont)',
+    url: 'https://doublepulsar.com/feed',
+    description: 'Kevin Beaumont on ransomware, zero-days, and active exploitation campaigns',
+    category: 'threat-intel',
+    source: 'doublepulsar.com',
+    language: 'en',
+  },
+  {
+    id: 'mitre-attack-medium',
+    name: 'MITRE ATT&CK',
+    url: 'https://medium.com/feed/mitre-attack',
+    description: 'Official updates from the MITRE ATT&CK team on framework changes and threat groups',
+    category: 'threat-intel',
+    source: 'medium.com/mitre-attack',
+    language: 'en',
+  },
+
+  {
+    id: 'dfir-lab',
+    name: 'DFIR Lab',
+    url: 'https://dfir-lab.ch/feed.xml',
+    description: 'Digital forensics and incident response research, threat analysis, and case studies',
+    category: 'threat-intel',
+    source: 'DFIR Lab',
+    language: 'en-US',
+  },
+  {
+    id: 'dfir-radar',
+    name: 'DFIR Radar',
+    url: 'https://falhumaid.github.io/DFIR_Radar_RSS/rss.xml',
+    description: 'Security advisories and threat intelligence from the DFIR Radar project',
+    category: 'threat-intel',
+    source: 'DFIR Radar',
+    language: 'en-US',
+  },
+  {
+    id: 'sans-isc',
+    name: 'SANS Internet Storm Center',
+    url: 'https://isc.sans.edu/rssfeed.xml',
+    description: 'Daily handler diaries and security threat intelligence',
+    category: 'threat-intel',
+    source: 'SANS',
+    language: 'en-US',
+  },
+  // ============================================================================
+  // SECURITY NEWS
+  // ============================================================================
+  {
+    id: 'krebsonsecurity',
+    name: 'Krebs on Security',
+    url: 'https://krebsonsecurity.com/feed/',
+    description: 'In-depth security journalism by Brian Krebs',
+    category: 'news',
+    source: 'Krebs on Security',
+    language: 'en-US',
+  },
+  {
+    id: 'hackernews',
+    name: 'The Hacker News',
+    url: 'https://feeds.feedburner.com/TheHackersNews',
+    description: 'Latest cybersecurity news, exploits, and vulnerabilities',
+    category: 'news',
+    source: 'The Hacker News',
+    language: 'en-US',
+  },
+  {
+    id: 'bleepingcomputer',
+    name: 'BleepingComputer',
+    url: 'https://www.bleepingcomputer.com/feed/',
+    description: 'Computer security news, tutorials, and how-to guides',
+    category: 'news',
+    source: 'BleepingComputer',
+    language: 'en-US',
+  },
+  {
+    id: 'securityweek',
+    name: 'SecurityWeek',
+    url: 'https://www.securityweek.com/feed/',
+    description: 'Cybersecurity news, analysis, and enterprise security insights',
+    category: 'news',
+    source: 'SecurityWeek',
+    language: 'en-US',
+  },
+  {
+    id: 'schneier',
+    name: 'Schneier on Security',
+    url: 'https://www.schneier.com/blog/atom.xml',
+    description: "Bruce Schneier's security blog and essays",
+    category: 'general',
+    source: 'Schneier',
+    language: 'en-US',
+  },
+  {
+    id: 'wired-security',
+    name: 'Wired Security',
+    url: 'https://www.wired.com/feed/category/security/latest/rss',
+    description: 'Security news and features from Wired',
+    category: 'news',
+    source: 'Wired',
+    language: 'en-US',
+  },
+  {
+    id: 'theregister-security',
+    name: 'The Register - Security',
+    url: 'https://www.theregister.com/security/headlines.atom',
+    description: 'Biting the hand that feeds IT - Security news',
+    category: 'news',
+    source: 'The Register',
+    language: 'en-GB',
+  },
+  {
+    id: 'helpnetsecurity',
+    name: 'Help Net Security',
+    url: 'https://www.helpnetsecurity.com/feed/',
+    description: 'Computer security news and cybersecurity insights',
+    category: 'news',
+    source: 'Help Net Security',
+    language: 'en-US',
+  },
+  {
+    id: 'csoconline',
+    name: 'CSO Online',
+    url: 'https://www.csoonline.com/feed/',
+    description: 'Security and risk management leadership news',
+    category: 'news',
+    source: 'CSO Online',
+    language: 'en-US',
+  },
+
+  // ============================================================================
+  // HACKER NEWS / Y COMBINATOR (AI / Tech / Cybersecurity)
+  // ============================================================================
+  {
+    id: 'hn-frontpage',
+    name: 'Hacker News',
+    url: 'https://hnrss.org/frontpage',
+    description: 'Hacker News front page - top tech, AI, and security stories',
+    category: 'tech',
+    source: 'Hacker News',
+    language: 'en-US',
+  },
+  {
+    id: 'hn-ask',
+    name: 'Ask HN',
+    url: 'https://hnrss.org/ask',
+    description: 'Ask Hacker News - questions and discussions from the community',
+    category: 'tech',
+    source: 'Hacker News',
+    language: 'en-US',
+  },
+  {
+    id: 'hn-show',
+    name: 'Show HN',
+    url: 'https://hnrss.org/show',
+    description: 'Show Hacker News - new projects, products, and demos',
+    category: 'tech',
+    source: 'Hacker News',
+    language: 'en-US',
+  },
+  // hnrss.org rate-limits worker egress as of 2026-05. Replaced with Recorded Future blog.
+  {
+    id: 'recorded-future',
+    name: 'Recorded Future Blog',
+    url: 'https://www.recordedfuture.com/rss.xml',
+    description: 'Recorded Future threat research — threat intel, APT tracking, and strategic analysis',
+    category: 'threat-intel',
+    source: 'recordedfuture.com',
+    language: 'en-US',
+  },
+  // hnrss.org rate-limits worker egress as of 2026-05. Replaced HN-query feeds with
+  // a direct The Cyber Wire feed for cybersecurity news.
+  {
+    id: 'thecyberwire',
+    name: 'The Cyber Wire',
+    url: 'https://thecyberwire.com/feed.xml',
+    description: 'Daily cybersecurity news briefing — curated stories across threat intel, policy, and industry',
+    category: 'news',
+    source: 'thecyberwire.com',
+    language: 'en-US',
+  },
+  {
+    id: 'yc-blog',
+    name: 'Y Combinator Blog',
+    url: 'https://www.ycombinator.com/blog/rss',
+    description: 'Y Combinator blog - startup essays, announcements, and YC news',
+    category: 'tech',
+    source: 'Y Combinator',
+    language: 'en-US',
+  },
+
+  {
+    id: 'osv-vulnerabilities',
+    name: 'OSV.dev — Open Source Vulnerabilities',
+    url: 'https://osv.dev/feed/rss.xml',
+    description:
+      'Open-source vulnerability feed covering PyPI, npm, Go, Maven, Rust, and other ecosystems — maintained by Google',
+    category: 'vulnerability',
+    source: 'osv.dev',
+    language: 'en',
+  },
+  {
+    id: 'redhunt-research',
+    name: 'RedHunt Labs Research',
+    url: 'https://research.redhuntlabs.com/feed.xml',
+    description:
+      'Attack surface management research, vulnerability disclosures, and APT infrastructure tracking by RedHunt Labs',
+    category: 'threat-intel',
+    source: 'research.redhuntlabs.com',
+    language: 'en',
+  },
+  // ============================================================================
+  // VULNERABILITIES & EXPLOITS
+  // ============================================================================
+  // CVE Details (cvedetails.com) was removed in 2026-05: their /rss.xml endpoint
+  // has been Cloudflare-bot-protected and returns 403 to non-browser User-Agents
+  // even via the worker proxy. The /dfir/cve page (NVD-backed) covers the same
+  // workflow more authoritatively. The cvedetails.com landing page remains
+  // listed in /threatintel/cve-resources as an external-link reference.
+  {
+    id: 'exploitdb',
+    name: 'Exploit-DB',
+    url: 'https://www.exploit-db.com/rss.xml',
+    description: 'The Exploit Database - latest exploits and vulnerabilities',
+    category: 'vulnerability',
+    source: 'Offensive Security',
+    language: 'en-US',
+  },
+
+  // ============================================================================
+  // MALWARE ANALYSIS & SANDBOX
+  // ============================================================================
+
+  // ============================================================================
+  // GENERAL SECURITY
+  // ============================================================================
+  // Reddit communities. Reddit aggressively rate-limits Cloudflare Worker egress
+  // for the most popular subs (r/cybersecurity, r/ransomware return 502); the four
+  // listed below have been verified to return parseable Atom from the proxy.
+  {
+    id: 'reddit-netsec',
+    name: 'Reddit r/netsec',
+    url: 'https://www.reddit.com/r/netsec/.rss',
+    description: 'Network security community discussions',
+    category: 'threat-intel',
+    source: 'Reddit',
+    language: 'en-US',
+  },
+  {
+    id: 'reddit-malware',
+    name: 'Reddit r/Malware',
+    url: 'https://www.reddit.com/r/Malware/.rss',
+    description: 'Malware analysis, samples, and reverse engineering discussion',
+    category: 'threat-intel',
+    source: 'Reddit',
+    language: 'en-US',
+  },
+  {
+    id: 'reddit-blueteamsec',
+    name: 'Reddit r/blueteamsec',
+    url: 'https://www.reddit.com/r/blueteamsec/.rss',
+    description: 'Defender-focused threat intel, detection rules, and incident reports',
+    category: 'threat-intel',
+    source: 'Reddit',
+    language: 'en-US',
+  },
+  {
+    id: 'reddit-threatintel',
+    name: 'Reddit r/threatintel',
+    url: 'https://www.reddit.com/r/threatintel/.rss',
+    description: 'Threat intelligence discussion, IOC sharing, and actor tracking',
+    category: 'threat-intel',
+    source: 'Reddit',
+    language: 'en-US',
+  },
+
+  // ============================================================================
+  // SCAM WATCH SOURCES — official alerts, deepfake news, victim reports
+  // ============================================================================
+  {
+    id: 'ftc-consumer',
+    name: 'FTC Consumer Alerts',
+    url: 'https://consumer.ftc.gov/blog/rss',
+    description: 'Federal Trade Commission consumer-protection blog — scam alerts and emerging fraud trends',
+    category: 'advisory',
+    source: 'FTC',
+    language: 'en-US',
+  },
+  {
+    id: 'ic3-psas',
+    name: 'FBI IC3 Public Service Announcements',
+    url: 'https://www.ic3.gov/CSA/RSS',
+    description: 'FBI Internet Crime Complaint Center PSAs — active fraud schemes, BEC, romance + tech-support scams',
+    category: 'advisory',
+    source: 'FBI IC3',
+    language: 'en-US',
+  },
+  {
+    id: 'snopes',
+    name: 'Snopes',
+    url: 'https://www.snopes.com/feed/',
+    description: 'Misinformation + scam fact-checking; routinely covers deepfake claims and viral scam stories',
+    category: 'news',
+    source: 'snopes.com',
+    language: 'en-US',
+  },
+  {
+    id: 'gnews-deepfake',
+    name: 'Google News — deepfake fraud',
+    url: 'https://news.google.com/rss/search?q=deepfake+fraud&hl=en-US&gl=US&ceid=US:en',
+    description: 'Google News search RSS for "deepfake fraud" — synthetic-media-driven fraud incidents',
+    category: 'news',
+    source: 'Google News',
+    language: 'en-US',
+  },
+  {
+    id: 'gnews-victim',
+    name: 'Google News — digital scam victims',
+    url: 'https://news.google.com/rss/search?q=digital+scam+victim&hl=en-US&gl=US&ceid=US:en',
+    description:
+      'Google News search RSS for "digital scam victim" — case-by-case fraud reporting from mainstream media',
+    category: 'news',
+    source: 'Google News',
+    language: 'en-US',
+  },
+  {
+    id: 'gnews-india-scam',
+    name: 'Google News — India scams & fraud',
+    url: 'https://news.google.com/rss/search?q=India+%22digital+arrest%22+OR+%22UPI+fraud%22+OR+%22cyber+fraud%22+OR+%22loan+app%22+scam&hl=en-IN&gl=IN&ceid=IN:en',
+    description:
+      'India-scoped Google News for active scam types — digital-arrest, UPI / payment fraud, predatory loan apps, courier & KYC scams.',
+    category: 'news',
+    source: 'Google News (IN)',
+    language: 'en-IN',
+  },
+  {
+    id: 'gnews-india-cybercrime',
+    name: 'Google News — India cybercrime & enforcement',
+    url: 'https://news.google.com/rss/search?q=India+cybercrime+OR+%22online+fraud%22+OR+I4C+OR+%221930+helpline%22+arrest&hl=en-IN&gl=IN&ceid=IN:en',
+    description:
+      'India cybercrime enforcement coverage — I4C / 1930 helpline actions, fraud-ring busts, mule-account crackdowns.',
+    category: 'news',
+    source: 'Google News (IN)',
+    language: 'en-IN',
+  },
+  {
+    id: 'reddit-scams',
+    name: 'Reddit r/Scams',
+    url: 'https://www.reddit.com/r/Scams/.rss',
+    description:
+      'First-person scam reports — phishing, IRS impersonation, romance, marketplace, tech-support, gift-card',
+    category: 'threat-intel',
+    source: 'Reddit',
+    language: 'en-US',
+  },
+  {
+    id: 'reddit-cryptoscams',
+    name: 'Reddit r/CryptoScams',
+    url: 'https://www.reddit.com/r/CryptoScams/.rss',
+    description: 'Cryptocurrency-specific scam reports — pig butchering, fake exchanges, wallet drainers',
+    category: 'threat-intel',
+    source: 'Reddit',
+    language: 'en-US',
+  },
+  {
+    id: 'reddit-phishing-scams',
+    name: 'Reddit r/PhishingScams',
+    url: 'https://www.reddit.com/r/PhishingScams/.rss',
+    description: 'User-reported phishing samples — SMS, email, voice (vishing)',
+    category: 'threat-intel',
+    source: 'Reddit',
+    language: 'en-US',
+  },
+  {
+    id: 'reddit-jobscams',
+    name: 'Reddit r/JobScams',
+    url: 'https://www.reddit.com/r/JobScams/.rss',
+    description: 'Fake recruiter / fake interview / employment-fraud reports',
+    category: 'threat-intel',
+    source: 'Reddit',
+    language: 'en-US',
+  },
+  {
+    // 2026-05: r/ScammerPayback subreddit went private/banned (404 from Reddit's
+    // RSS endpoint). r/scambait covers the same beat — call-centre exposes,
+    // scammer-baiting write-ups, impersonation tradecraft. Keeping the same id
+    // so all references in landing widgets + ScamWatch sections continue to work.
+    id: 'reddit-scammer-payback',
+    name: 'Reddit r/scambait',
+    url: 'https://www.reddit.com/r/scambait/.rss',
+    description: 'Scammer-baiting and call-centre exposé community — scammer tradecraft, impersonation patterns',
+    category: 'threat-intel',
+    source: 'Reddit',
+    language: 'en-US',
+  },
+  {
+    id: 'gnews-pig-butcher',
+    name: 'Google News — pig butchering scam',
+    url: 'https://news.google.com/rss/search?q=pig+butchering+scam&hl=en-US&gl=US&ceid=US:en',
+    description: 'Long-con investment + crypto fraud ("sha zhu pan") news coverage',
+    category: 'news',
+    source: 'Google News',
+    language: 'en-US',
+  },
+  {
+    id: 'gnews-job-scam',
+    name: 'Google News — job / recruiter scam',
+    url: 'https://news.google.com/rss/search?q=job+scam+fake+recruiter&hl=en-US&gl=US&ceid=US:en',
+    description: 'Fake-job / fake-recruiter / employment-fraud incident coverage',
+    category: 'news',
+    source: 'Google News',
+    language: 'en-US',
+  },
+  {
+    id: 'gnews-tech-support',
+    name: 'Google News — tech support scam',
+    url: 'https://news.google.com/rss/search?q=tech+support+scam&hl=en-US&gl=US&ceid=US:en',
+    description: 'Microsoft / Apple / IRS / IT-support impersonation incident coverage',
+    category: 'news',
+    source: 'Google News',
+    language: 'en-US',
+  },
+  {
+    id: 'gnews-investment-scam',
+    name: 'Google News — investment scam',
+    url: 'https://news.google.com/rss/search?q=investment+scam+fraud&hl=en-US&gl=US&ceid=US:en',
+    description: 'Investment / brokerage / advisory fraud coverage',
+    category: 'news',
+    source: 'Google News',
+    language: 'en-US',
+  },
+  {
+    id: 'gnews-voice-clone',
+    name: 'Google News — AI voice deepfake',
+    url: 'https://news.google.com/rss/search?q=AI+voice+deepfake&hl=en-US&gl=US&ceid=US:en',
+    description: 'Voice-cloning vishing / family-emergency / kidnapping-claim incident coverage',
+    category: 'news',
+    source: 'Google News',
+    language: 'en-US',
+  },
+  {
+    id: 'gnews-sim-swap',
+    name: 'Google News — SIM swap',
+    url: 'https://news.google.com/rss/search?q=SIM+swap+attack&hl=en-US&gl=US&ceid=US:en',
+    description: 'SIM-swap account-takeover incidents — banking, crypto, social-media takeovers',
+    category: 'news',
+    source: 'Google News',
+    language: 'en-US',
+  },
+  {
+    id: 'gnews-rug-pull',
+    name: 'Google News — crypto rug',
+    url: 'https://news.google.com/rss/search?q=crypto+rug&hl=en-US&gl=US&ceid=US:en',
+    description: 'Token / DeFi rug-pull incidents — exit-scam projects, drained liquidity',
+    category: 'news',
+    source: 'Google News',
+    language: 'en-US',
+  },
+  {
+    id: 'gnews-nft-drainer',
+    name: 'Google News — wallet drainer',
+    url: 'https://news.google.com/rss/search?q=wallet+drainer&hl=en-US&gl=US&ceid=US:en',
+    description: 'Wallet-drainer kits (Inferno, Pink, Angel), NFT phishing, seed-phrase theft',
+    category: 'news',
+    source: 'Google News',
+    language: 'en-US',
+  },
+  {
+    id: 'gnews-defi-hack',
+    name: 'Google News — DeFi exploit / hack',
+    url: 'https://news.google.com/rss/search?q=DeFi+exploit+hack&hl=en-US&gl=US&ceid=US:en',
+    description: 'Smart-contract exploits, bridge drains, oracle manipulation, flash-loan attacks',
+    category: 'news',
+    source: 'Google News',
+    language: 'en-US',
+  },
+  {
+    id: 'rekt-news',
+    name: 'rekt.news',
+    url: 'https://rekt.news/rss/feed.xml',
+    description: 'Long-form post-mortems of major DeFi exploits, rug pulls, and protocol failures',
+    category: 'threat-intel',
+    source: 'rekt.news',
+    language: 'en',
+  },
+  {
+    id: 'web3-grift',
+    name: 'Web3 Is Going Just Great',
+    url: 'https://www.web3isgoinggreat.com/feed.xml',
+    description: "Molly White's running ledger of crypto scams, rug pulls, and grift incidents",
+    category: 'threat-intel',
+    source: 'web3isgoinggreat.com',
+    language: 'en-US',
+  },
+
+  // ============================================================================
+  // INDUSTRY & FUNDRAISING — security-vendor M&A, Series A-D rounds, IPO news
+  // ============================================================================
+  {
+    id: 'techcrunch-security',
+    name: 'TechCrunch — Security',
+    url: 'https://techcrunch.com/category/security/feed/',
+    description: 'Security-vendor funding, M&A, breaches, and product launches as covered by TechCrunch',
+    category: 'tech',
+    source: 'techcrunch.com',
+    language: 'en-US',
+  },
+  {
+    id: 'venturebeat-security',
+    name: 'VentureBeat — Security',
+    url: 'https://venturebeat.com/category/security/feed/',
+    description: 'Enterprise security industry coverage — funding, AI/security crossover, vendor moves',
+    category: 'tech',
+    source: 'venturebeat.com',
+    language: 'en-US',
+  },
+  {
+    id: 'gnews-cybersec-funding',
+    name: 'Google News — cybersecurity Series A funding',
+    url: 'https://news.google.com/rss/search?q=cybersecurity+Series+A+funding&hl=en-US&gl=US&ceid=US:en',
+    description: 'Recent Series A / B / C announcements in the cybersecurity sector',
+    category: 'tech',
+    source: 'Google News',
+    language: 'en-US',
+  },
+  {
+    id: 'gnews-cybersec-acquisition',
+    name: 'Google News — cybersecurity acquisition',
+    url: 'https://news.google.com/rss/search?q=cybersecurity+acquisition&hl=en-US&gl=US&ceid=US:en',
+    description: 'M&A activity in cybersecurity — strategic acquisitions, vendor consolidation',
+    category: 'tech',
+    source: 'Google News',
+    language: 'en-US',
+  },
+  {
+    id: 'gnews-infosec-startup',
+    name: 'Google News — AI infrastructure spending',
+    url: 'https://news.google.com/rss/search?q=AI+infrastructure+spending&hl=en-US&gl=US&ceid=US:en',
+    description: 'AI capex, data-centre build-outs, cloud-vendor AI spend, model-training investment',
+    category: 'tech',
+    source: 'Google News',
+    language: 'en-US',
+  },
+
+  // ============================================================================
+  // AI — vendor blogs, AI-section tags, AI-specific Google News queries
+  // ============================================================================
+  {
+    id: 'techcrunch-ai',
+    name: 'TechCrunch — AI',
+    url: 'https://techcrunch.com/category/artificial-intelligence/feed/',
+    description: 'TechCrunch AI tag — model releases, AI funding, agentic-AI products, lab moves',
+    category: 'tech',
+    source: 'techcrunch.com',
+    language: 'en-US',
+  },
+  {
+    id: 'verge-ai',
+    name: 'The Verge — AI',
+    url: 'https://www.theverge.com/rss/ai-artificial-intelligence/index.xml',
+    description: 'Consumer + product-side AI coverage from The Verge',
+    category: 'tech',
+    source: 'theverge.com',
+    language: 'en-US',
+  },
+  {
+    id: 'openai-news',
+    name: 'OpenAI News',
+    url: 'https://openai.com/news/rss.xml',
+    description: 'Official OpenAI announcements — model releases, safety + research notes, policy',
+    category: 'tech',
+    source: 'openai.com',
+    language: 'en-US',
+  },
+  {
+    id: 'google-ai',
+    name: 'Google AI Blog',
+    url: 'https://blog.google/technology/ai/rss/',
+    description: 'Google research and product launches under the AI tag',
+    category: 'tech',
+    source: 'blog.google',
+    language: 'en-US',
+  },
+  {
+    id: 'gnews-ai-security',
+    name: 'Google News — AI security incident',
+    url: 'https://news.google.com/rss/search?q=AI+security+incident&hl=en-US&gl=US&ceid=US:en',
+    description: 'Recent AI-system security incidents — prompt injection in production, agent failures, model leaks',
+    category: 'tech',
+    source: 'Google News',
+    language: 'en-US',
+  },
+  {
+    id: 'gnews-ai-funding',
+    name: 'Google News — AI startup funding',
+    url: 'https://news.google.com/rss/search?q=AI+startup+funding&hl=en-US&gl=US&ceid=US:en',
+    description: 'Funding rounds across the AI vendor / model / tooling space',
+    category: 'tech',
+    source: 'Google News',
+    language: 'en-US',
+  },
+  {
+    id: 'gnews-genai-enterprise',
+    name: 'Google News — enterprise AI deployment',
+    url: 'https://news.google.com/rss/search?q=enterprise+AI+deployment&hl=en-US&gl=US&ceid=US:en',
+    description: 'Enterprise AI rollouts — security posture, ROI claims, governance moves',
+    category: 'tech',
+    source: 'Google News',
+    language: 'en-US',
+  },
+
+  // ============================================================================
+  // General tech — broader signal beyond pure security / AI
+  // ============================================================================
+  {
+    id: 'ars-tech',
+    name: 'Ars Technica — Technology Lab',
+    url: 'https://feeds.arstechnica.com/arstechnica/technology-lab',
+    description: 'Long-form Ars coverage of infrastructure, OS, networking, devices, and the security crossover',
+    category: 'tech',
+    source: 'arstechnica.com',
+    language: 'en-US',
+  },
+  {
+    id: 'mit-tech-review',
+    name: 'MIT Technology Review',
+    url: 'https://www.technologyreview.com/feed/',
+    description: 'Independent reporting on emerging technology, AI ethics, biotech, computing',
+    category: 'tech',
+    source: 'technologyreview.com',
+    language: 'en-US',
+  },
+  // ─── Breach-focused news (added 2026-05-11) ──────────────────────────
+  // Sourced separately from the broader threat-intel feeds so the
+  // /threatintel/breach page can pull a curated stream that's strictly
+  // about disclosed breaches — not general security news.
+  {
+    id: 'vpnmentor-research',
+    name: 'vpnMentor Research Lab',
+    url: 'https://www.vpnmentor.com/blog/category/research/feed/',
+    description:
+      'vpnMentor research lab — discovered and reported breaches, particularly in exposed-database / misconfigured-cloud territory',
+    category: 'threat-intel',
+    source: 'vpnmentor.com',
+    language: 'en',
+  },
+  {
+    id: 'grcsolutions-breaches',
+    name: 'GRC Solutions · Data Breach Blog',
+    url: 'https://grcsolutions.io/feed/',
+    description:
+      'GRC Solutions (formerly IT Governance UK) — monthly breach round-ups + analysis of high-profile data-protection incidents',
+    category: 'threat-intel',
+    source: 'grcsolutions.io',
+    language: 'en-GB',
+  },
+  {
+    id: 'comparitech-breaches',
+    name: 'Comparitech · Privacy Research',
+    url: 'https://www.comparitech.com/blog/feed/',
+    description:
+      'Comparitech privacy / breach research — Bob Diachenko-style exposed-database investigations and breach reporting',
+    category: 'threat-intel',
+    source: 'comparitech.com',
+    language: 'en',
+  },
+  {
+    id: 'troyhunt-blog',
+    name: 'Troy Hunt · HIBP blog',
+    url: 'https://www.troyhunt.com/rss/',
+    description:
+      "Troy Hunt's personal blog — write-ups of every Have I Been Pwned acquisition, plus deep dives on credential-stuffing, breach pricing, and the post-leak data-broker ecosystem.",
+    category: 'threat-intel',
+    source: 'troyhunt.com',
+    language: 'en',
+  },
+  {
+    id: 'cybernews',
+    name: 'CyberNews',
+    url: 'https://cybernews.com/feed/',
+    description: 'CyberNews — data breach investigations, cybersecurity research, and exposure reports.',
+    category: 'threat-intel',
+    source: 'cybernews.com',
+    language: 'en',
+  },
+  {
+    id: 'grahamcluley',
+    name: 'Graham Cluley',
+    url: 'https://grahamcluley.com/feed/',
+    description: 'Graham Cluley — independent security blog covering data breaches, malware, and cybercrime.',
+    category: 'threat-intel',
+    source: 'grahamcluley.com',
+    language: 'en',
+  },
+  {
+    id: 'idtheftcenter',
+    name: 'Identity Theft Resource Center',
+    url: 'https://www.idtheftcenter.org/feed/',
+    description:
+      'ITRC — non-profit that tracks U.S. publicly-reported data breaches; publishes quarterly + annual reports on breach trends, victim counts, and notification compliance.',
+    category: 'threat-intel',
+    source: 'idtheftcenter.org',
+    language: 'en',
+  },
+  {
+    id: 'gnews-india-cyberattack',
+    name: 'Google News — India cyber attacks & breaches',
+    url: 'https://news.google.com/rss/search?q=India+%22cyber+attack%22+OR+%22data+breach%22+OR+ransomware+OR+APT+OR+hacked&hl=en-IN&gl=IN&ceid=IN:en',
+    description:
+      'India-scoped Google News for cyber-attacks, data breaches, ransomware incidents and APT activity targeting Indian organisations.',
+    category: 'threat-intel',
+    source: 'Google News (IN)',
+    language: 'en-IN',
+  },
+  {
+    id: 'gnews-cert-in',
+    name: 'CERT-In advisories (via Google News)',
+    url: 'https://news.google.com/rss/search?q=%22CERT-In%22+advisory+OR+vulnerability+OR+alert&hl=en-IN&gl=IN&ceid=IN:en',
+    description:
+      'Coverage of CERT-In (Indian Computer Emergency Response Team) advisories, vulnerability notes and alerts — CERT-In has no stable public RSS, so this tracks it via news.',
+    category: 'threat-intel',
+    source: 'Google News (IN)',
+    language: 'en-IN',
+  },
+
+  // ============================================================================
+  // FEED EXPANSION 2026-05-18 — all URLs HTTP-200 + XML verified before adding.
+  // Dark Web / Threat Feeds → category 'threat-intel'; Tech & AI → 'tech'.
+  // ============================================================================
+  {
+    id: 'cyble-blog',
+    name: 'Cyble Research',
+    url: 'https://cyble.com/feed/',
+    description: 'Threat intelligence research — dark-web monitoring, ransomware, breach and campaign analysis',
+    category: 'threat-intel',
+    source: 'cyble.com',
+    language: 'en',
+  },
+  {
+    id: 'socradar-blog',
+    name: 'SOCRadar',
+    url: 'https://socradar.io/feed/',
+    description: 'Dark-web and external attack-surface threat research, leak and ransomware tracking',
+    category: 'threat-intel',
+    source: 'socradar.io',
+    language: 'en',
+  },
+  {
+    id: 'bushidotoken',
+    name: 'BushidoToken',
+    url: 'https://blog.bushidotoken.net/feeds/posts/default?alt=rss',
+    description: 'Independent CTI research — ransomware, dark-web actors, campaign deep-dives',
+    category: 'threat-intel',
+    source: 'blog.bushidotoken.net',
+    language: 'en',
+  },
+  {
+    id: 'rapid7-blog',
+    name: 'Rapid7 Blog',
+    url: 'https://www.rapid7.com/rss.xml',
+    description: 'Vulnerability research, emergent-threat advisories and detection guidance',
+    category: 'threat-intel',
+    source: 'rapid7.com',
+    language: 'en',
+  },
+  {
+    id: 'jpcert',
+    name: 'JPCERT/CC Eyes',
+    url: 'https://blogs.jpcert.or.jp/en/atom.xml',
+    description: 'Japan CERT incident & malware analysis — APT tooling, ICS, regional campaigns',
+    category: 'threat-intel',
+    source: 'jpcert.or.jp',
+    language: 'en',
+  },
+  {
+    id: 'ncsc-uk',
+    name: 'NCSC UK',
+    url: 'https://www.ncsc.gov.uk/api/1/services/v1/all-rss-feed.xml',
+    description: 'UK National Cyber Security Centre advisories, guidance and threat reports',
+    category: 'advisory',
+    source: 'ncsc.gov.uk',
+    language: 'en-GB',
+  },
+  {
+    id: 'ahnlab-asec',
+    name: 'AhnLab ASEC',
+    url: 'https://asec.ahnlab.com/en/feed/',
+    description: 'AhnLab Security Emergency-response Center — malware, phishing and APT analysis',
+    category: 'threat-intel',
+    source: 'asec.ahnlab.com',
+    language: 'en',
+  },
+  {
+    id: 'huggingface-blog',
+    name: 'Hugging Face Blog',
+    url: 'https://huggingface.co/blog/feed.xml',
+    description: 'Open-source AI / ML research, model releases and tooling',
+    category: 'tech',
+    source: 'huggingface.co',
+    language: 'en',
+  },
+  {
+    id: 'the-decoder',
+    name: 'The Decoder',
+    url: 'https://the-decoder.com/feed/',
+    description: 'AI industry news — model launches, research, policy and enterprise adoption',
+    category: 'tech',
+    source: 'the-decoder.com',
+    language: 'en',
+  },
+  {
+    id: 'import-ai',
+    name: 'Import AI (Jack Clark)',
+    url: 'https://importai.substack.com/feed',
+    description: 'Weekly AI research & policy analysis newsletter',
+    category: 'tech',
+    source: 'importai.substack.com',
+    language: 'en',
+  },
+  {
+    id: 'deepmind-blog',
+    name: 'Google DeepMind',
+    url: 'https://blog.google/technology/google-deepmind/rss/',
+    description: 'DeepMind research announcements and model releases',
+    category: 'tech',
+    source: 'blog.google',
+    language: 'en',
+  },
+  {
+    // Synthesised RSS — re-publishes the MyThreatIntel ransomware alerts
+    // already parsed for /api/v1/ransomware-recent so MTI is selectable as
+    // its OWN labelled source (absolute same-origin URL → aggregator-eligible).
+    id: 'mti-ransomware',
+    name: 'MyThreatIntel — ransomware',
+    url: 'https://pranithjain.qzz.io/api/v1/feeds/mti-ransomware',
+    description: 'Ransomware victim claims parsed from the MyThreatIntel CTI Telegram channel',
+    category: 'threat-intel',
+    source: 't.me/mythreatintel',
+    language: 'es',
+  },
+];
+
+/**
+ * Feeds shown in the live Threat Intel panel on the /dfir landing page.
+ * Auto-derived from category but with an explicit exclusion list so the
+ * scam-watch / industry / AI feeds (which live in their own dedicated
+ * tools — /threatintel/scam-watch and /threatintel/tech-ai-news) don't pollute the
+ * landing page's threat-intel surface.
+ */
+const EXCLUDE_FROM_LANDING = new Set<string>([
+  // Scam Watch sources (live at /threatintel/scam-watch)
+  'ftc-consumer',
+  'ic3-psas',
+  'snopes',
+  'gnews-deepfake',
+  'gnews-victim',
+  'gnews-pig-butcher',
+  'gnews-job-scam',
+  'gnews-tech-support',
+  'gnews-investment-scam',
+  'gnews-voice-clone',
+  'gnews-sim-swap',
+  'gnews-rug-pull',
+  'gnews-nft-drainer',
+  'gnews-defi-hack',
+  'sophos-xops',
+  'reddit-scams',
+  'reddit-cryptoscams',
+  'reddit-phishing-scams',
+  'reddit-jobscams',
+  'reddit-scammer-payback',
+  'rekt-news',
+  'web3-grift',
+]);
+
+export const defaultFeeds = rssFeeds
+  .filter((f) => f.category === 'threat-intel' || f.category === 'advisory' || f.category === 'news')
+  .filter((f) => !EXCLUDE_FROM_LANDING.has(f.id))
+  .map((f) => f.id);
+
+/**
+ * Tech / AI / Industry feeds — rendered as the full surface at
+ * /threatintel/tech-ai-news. The /dfir landing page used to host these via the
+ * standalone TechNewsFeed component; that role has been folded into the
+ * Tech & AI card on LiveSnapshotPanel (which uses a smaller curated subset
+ * of these IDs — see TECH_AI_SNAPSHOT_FEED_IDS in that file). Three
+ * sections, three lists.
+ */
+export const landingAiFeeds = [
+  'techcrunch-ai',
+  'verge-ai',
+  'openai-news',
+  'google-ai',
+  'gnews-ai-security',
+  'gnews-ai-funding',
+  'gnews-genai-enterprise',
+  'recorded-future',
+  'huggingface-blog',
+  'the-decoder',
+  'import-ai',
+  'deepmind-blog',
+];
+
+export const landingIndustryFeeds = [
+  'techcrunch-security',
+  'venturebeat-security',
+  'gnews-cybersec-funding',
+  'gnews-cybersec-acquisition',
+  'gnews-infosec-startup',
+];
+
+export const landingGeneralTechFeeds = [
+  'ars-tech',
+  'mit-tech-review',
+  'hn-frontpage',
+  'hn-ask',
+  'hn-show',
+  'thecyberwire',
+  'yc-blog',
+];
+
+/** Backward-compat alias retained for any older callers. */
+export const defaultTechFeeds = landingGeneralTechFeeds;
+
+/**
+ * Threat-feeds surface — used as the dedicated /threatintel/threat-feeds page.
+ * The /dfir landing page used to host these via the standalone
+ * ThreatIntelFeed component; that role has been folded into the Threat
+ * Intel card on LiveSnapshotPanel (which uses a smaller curated subset —
+ * see THREAT_INTEL_SNAPSHOT_FEED_IDS in that file). Six sections,
+ * hand-picked so each tab has a coherent identity.
+ */
+export const landingThreatGovernment = ['cisa-alerts', 'cisa-medical-advisories', 'ncsc-uk'];
+export const landingThreatIndia = ['gnews-india-cyberattack', 'gnews-cert-in'];
+
+export const landingThreatVendor = [
+  'talos',
+  'eset',
+  'kaspersky-securelist',
+  'crowdstrike',
+  'sentinelone-labs',
+  'google-project-zero',
+  'checkpoint-research',
+  'sophos-xops',
+  'malwarebytes-labs',
+  'huntress',
+  'red-canary',
+  'malware-traffic-analysis',
+  'doublepulsar',
+  'akamai-security',
+  'dfir-lab',
+  'dfir-radar',
+  'sans-isc',
+  'rapid7-blog',
+  'jpcert',
+  'ahnlab-asec',
+];
+
+export const landingThreatInvestigation = [
+  'dfir-report',
+  'the-record',
+  'curated-intel',
+  'darkwebinformer',
+  'ransomware-live',
+  'databreaches',
+  'mitre-attack-medium',
+  'cyble-blog',
+  'socradar-blog',
+  'bushidotoken',
+  'mti-ransomware',
+];
+
+export const landingThreatReddit = ['reddit-netsec', 'reddit-malware', 'reddit-blueteamsec', 'reddit-threatintel'];
+
+export const landingThreatVulns = ['exploitdb'];
+
+export const landingThreatNews = [
+  'krebsonsecurity',
+  'hackernews',
+  'bleepingcomputer',
+  'securityweek',
+  'schneier',
+  'wired-security',
+  'theregister-security',
+  'helpnetsecurity',
+  'csoconline',
+  'threatpost',
+];
+
+// Feed categories for filtering
+export const feedCategories = [
+  { id: 'all', label: 'All Feeds' },
+  { id: 'vulnerability', label: 'Vulnerabilities' },
+  { id: 'advisory', label: 'Advisories' },
+  { id: 'ics-cert', label: 'ICS-CERT' },
+  { id: 'threat-intel', label: 'Threat Intel' },
+  { id: 'news', label: 'News' },
+  { id: 'tech', label: 'Tech & AI' },
+  { id: 'general', label: 'General' },
+];
+
+// Get feed statistics
+export function getFeedStats() {
+  return {
+    total: rssFeeds.length,
+    byCategory: feedCategories.slice(1).map((cat) => ({
+      ...cat,
+      count: rssFeeds.filter((f) => f.category === cat.id).length,
+    })),
+  };
+}

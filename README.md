@@ -1,51 +1,54 @@
 # DFIR Platform
 
-> **Status:** Design archive. The shipped implementation now lives in the monorepo at [github.com/Pranith-Jain/Pranith-Jain.github.io](https://github.com/Pranith-Jain/Pranith-Jain.github.io) — this repo contains the original prototypes, design notes, and planning documents.
+Interactive incident-response and threat-investigation toolkit. ~110 single-purpose
+tools (IOC enrichment, CVE lookup, EXIF / EVTX / PE / EML parsing, MITRE & ATLAS
+matrices, STIX builder, threat-actor knowledge base, rule converters, IAM /
+RBAC analyzers, and many more) wired to a Cloudflare Worker API.
 
-**Live:** [pranithjain.qzz.io/dfir](https://pranithjain.qzz.io/dfir) — 65+ tools, free, no signup.
+**Live:** [pranithjain.qzz.io/dfir](https://pranithjain.qzz.io/dfir)
 
----
+This repository is the `/dfir` slice extracted from the
+[pranithjain.qzz.io](https://pranithjain.qzz.io) monorepo. Everything that is
+not `/dfir/*` (portfolio, blog, threat-intel pages) has been stripped. The
+earlier Python / Next.js prototypes are preserved under [`archive/`](./archive)
+for historical reference.
 
-## Evolution
+## Stack
 
-This repo started as separate prototypes across multiple languages before consolidating into a single Cloudflare Worker deployment:
+- React 18 + Vite (client bundle aliased to `preact/compat` for parse-time wins)
+- TypeScript, Tailwind CSS
+- Cloudflare Workers (API) — `worker/index.ts` + `api/src/*`
+- Vitest for unit tests
 
-| Phase | What | Where it went |
-|-------|------|---------------|
-| 1 | Standalone Cloudflare Worker IOC checker (15 providers) | Rewritten into `api/src/providers/*` (now 24 providers) |
-| 2 | Python FastAPI prototype (phishing analyzer, exposure scanner, file analyzer, threat intel feeds) | Reference only — logic ported to TypeScript/Hono |
-| 3 | Next.js web frontend prototype | Replaced by React 18 + Vite + Tailwind in the monorepo |
-| 4 | CLI tools | Reference only — functionality superseded by the web UI |
+## Layout
 
-## What shipped
+```
+src/             React + Vite SPA (routes /dfir/*)
+  pages/dfir/      ~110 tool pages, lazy-loaded
+  components/      AppShell, dfir/, intel/, shared chrome
+  data/dfir/       ATT&CK / ATLAS / wiki / actor data
+  lib/, hooks/, services/
+api/             Cloudflare Worker route handlers
+worker/          Worker entry
+migrations/      D1 schema
+archive/         Earlier Python / Next.js prototypes (kept for history)
+```
 
-The monorepo now contains **three surfaces in one deploy:**
+## Develop
 
-### DFIR Toolkit — 65+ tools
-IOC/Hash Checker (24 sources, streaming), Malware Scanner, Phishing Analyzer, Domain/IP Reputation (19 DNSBLs via DoH), URL/Email Reputation, CVE Lookup (NVD/EPSS/KEV), STIX Viewer, Diamond Model, MITRE ATT&CK, YARA/Sigma Playground, and 55+ more.
+```bash
+npm install
+npm run dev          # Vite on :5173, proxies /api -> :8787
+npm run dev:api      # Wrangler on :8787
+npm run test         # Vitest
+npm run build        # client bundle
+```
 
-### Threat Intel Platform — 20+ surfaces
-Ransomware leak-site tracking, CVE/KCV feed, cross-source IOC correlation (18 feeds), Telegram/Reddit/Bluesky firehoses, auto-generated daily briefings, typosquat domain monitoring, actor timelines, and a 90+ source aggregation.
+## Deploy
 
-### Email Security Suite
-BEC spoofability scoring with per-gap remediation records, email reputation with 19 DNSBL blacklist checks, phishing email header analysis, and DMARC/SPF/DKIM/BIMI/MTA-STS/TLS-RPT inspection.
+`npm run deploy` builds the client and ships it to Cloudflare via Wrangler.
+`wrangler.jsonc` carries the production binding config.
 
-### Key stats
-- 24 IOC providers, 19 DNSBL sources
-- 181 unit tests, 21 test files
-- 0 API keys required (works with public sources only)
-- 158 static assets, 760 KB total, 18ms worker startup
-- WCAG 2.2 AA compliant, 100/100 Lighthouse
+## License
 
-## Design documents still relevant here
-
-- [DFIR-PLATFORM-PLAN.md](./DFIR-PLATFORM-PLAN.md) — original platform plan and architecture decisions
-- [docs/](./docs) — detailed design specs for individual services
-- [web/](./web) — Next.js frontend prototype (reference only)
-- [api/](./api) — Python FastAPI prototype (reference only)
-
-## Quick links
-
-- **Live:** [pranithjain.qzz.io/dfir](https://pranithjain.qzz.io/dfir)
-- **Threat Intel:** [pranithjain.qzz.io/threatintel](https://pranithjain.qzz.io/threatintel)
-- **Source:** [github.com/Pranith-Jain/Pranith-Jain.github.io](https://github.com/Pranith-Jain/Pranith-Jain.github.io)
+MIT — see [LICENSE](./LICENSE).
