@@ -151,6 +151,13 @@ export const SECTIONS: Section[] = [
         icon: Hash,
       },
       {
+        path: '/dfir/abuse-rep',
+        useCase: 'Triage an IP or email against a crowdsourced abuse registry.',
+        label: 'Abuse Reputation',
+        desc: 'Stop Forum Spam (free, no key) · report frequency · last-seen · tor-exit flag · confidence · ASN/country',
+        icon: ShieldAlert,
+      },
+      {
         path: '/dfir/ioc-pivot',
         useCase: 'Graph what an indicator touches and pivot through it.',
         label: 'IOC Pivot Graph',

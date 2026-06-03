@@ -83,6 +83,7 @@ const PrivacyHub = lazy(() => import('./pages/dfir/PrivacyHub'));
 const UsernamePivot = lazy(() => import('./pages/dfir/UsernamePivot'));
 const Wayback = lazy(() => import('./pages/dfir/Wayback'));
 const IpGeo = lazy(() => import('./pages/dfir/IpGeo'));
+const AbuseRep = lazy(() => import('./pages/dfir/AbuseRep'));
 const LogParser = lazy(() => import('./pages/dfir/LogParser'));
 const Socmint = lazy(() => import('./pages/dfir/Socmint'));
 const OsintFramework = lazy(() => import('./pages/dfir/OsintFramework'));
@@ -176,6 +177,7 @@ export function AppContent() {
       <Route path="/" element={<Navigate to="/dfir" replace />} />
       <Route path="/dfir" element={<R Component={DFIR} />} />
       <Route path="/dfir/ioc-check" element={<R Component={IocCheck} />} />
+      <Route path="/dfir/abuse-rep" element={<R Component={AbuseRep} />} />
       <Route path="/dfir/phishing" element={<R Component={Phishing} />} />
       <Route path="/dfir/domain" element={<R Component={Domain} />} />
       <Route path="/dfir/domain-rep" element={<R Component={DomainReputation} />} />
