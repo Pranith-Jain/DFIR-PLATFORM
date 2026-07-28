@@ -1,17 +1,10 @@
 # DFIR Platform
 
-Interactive incident-response and threat-investigation toolkit. ~110 single-purpose
-tools (IOC enrichment, CVE lookup, EXIF / EVTX / PE / EML parsing, MITRE & ATLAS
-matrices, STIX builder, threat-actor knowledge base, rule converters, IAM /
-RBAC analyzers, and many more) wired to a Cloudflare Worker API.
+Interactive incident-response and threat-investigation toolkit. ~110 single-purpose tools (IOC enrichment, CVE lookup, EXIF / EVTX / PE / EML parsing, MITRE & ATLAS matrices, STIX builder, threat-actor knowledge base, rule converters, IAM / RBAC analyzers, and many more) wired to a Cloudflare Worker API.
 
 **Live:** [pranithjain.qzz.io/dfir](https://pranithjain.qzz.io/dfir)
 
-This repository is the `/dfir` slice extracted from the
-[pranithjain.qzz.io](https://pranithjain.qzz.io) monorepo. Everything that is
-not `/dfir/*` (portfolio, blog, threat-intel pages) has been stripped. The
-earlier Python / Next.js prototypes are preserved under [`archive/`](./archive)
-for historical reference.
+This repository is the `/dfir` slice extracted from the [pranithjain.qzz.io](https://pranithjain.qzz.io) monorepo. Everything that is not `/dfir/*` (portfolio, blog, threat-intel pages) has been stripped. The earlier Python / Next.js prototypes are preserved under [`archive/`](/Pranith-Jain/DFIR-PLATFORM/blob/main/archive) for historical reference.
 
 ## Stack
 
@@ -46,9 +39,8 @@ npm run build        # client bundle
 
 ## Deploy
 
-`npm run deploy` builds the client and ships it to Cloudflare via Wrangler.
-`wrangler.jsonc` carries the production binding config.
+`npm run deploy` builds the client and ships it to Cloudflare via Wrangler. `wrangler.jsonc` carries the production binding config.
 
 ## License
 
-MIT — see [LICENSE](./LICENSE).
+MIT — see [LICENSE](/Pranith-Jain/DFIR-PLATFORM/blob/main/LICENSE).
