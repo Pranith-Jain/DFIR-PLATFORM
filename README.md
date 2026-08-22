@@ -6,6 +6,11 @@ Interactive incident-response and threat-investigation toolkit. ~110 single-purp
 
 This repository is the `/dfir` slice extracted from the [pranithjain.qzz.io](https://pranithjain.qzz.io) monorepo. Everything that is not `/dfir/*` (portfolio, blog, threat-intel pages) has been stripped. The earlier Python / Next.js prototypes are preserved under [`archive/`](/Pranith-Jain/DFIR-PLATFORM/blob/main/archive) for historical reference.
 
+> **Snapshot note:** this slice was extracted 2026-08 and is not a live mirror — the
+> monorepo's `/dfir` surface keeps growing (186 tool pages there vs 112 here). Treat
+> this repo as a standalone distribution of the toolkit as of the extraction date;
+> new tools land in the monorepo first.
+
 ## Stack
 
 - React 18 + Vite (client bundle aliased to `preact/compat` for parse-time wins)
